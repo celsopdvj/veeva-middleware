@@ -1,5 +1,4 @@
 import { useSearchParams } from "next/navigation";
-import fs from "fs";
 import { useState } from "react";
 
 export default function Home() {

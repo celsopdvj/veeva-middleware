@@ -14,10 +14,10 @@ export default async function handler(
 }
 
 const SCOPES = ["signature", "impersonation"];
-const dsJWTClientId = "e465cd59-f250-47c0-8488-1330bbc287d2";
-const dsOauthServer = "https://account-d.docusign.com";
-const privateKeyLocation = "./private.key";
-const impersonatedUserGuid = "f15cbf02-0f65-45f7-b812-9247c6438cdf";
+const dsJWTClientId = process.env.DOCUSIGN_CLIENT_ID ?? "";
+const dsOauthServer = process.env.DOCUSIGN_AUTH_URL ?? "";
+const privateKey = process.env.DOCUSIGN_PRIVATE_KEY ?? "";
+const impersonatedUserGuid = process.env.DOCUSIGN_IMPERSONATE_USER_ID ?? "";
 
 function getConsent() {
   try {
@@ -47,7 +47,7 @@ async function authenticate() {
     const jwtLifeSec = 10 * 60; // requested lifetime for the JWT is 10 min
     const dsApi = new docusign.ApiClient();
     dsApi.setOAuthBasePath(dsOauthServer.replace("https://", "")); // it should be domain only.
-    let rsaKey = fs.readFileSync(privateKeyLocation);
+    let rsaKey = Buffer.from(privateKey.replace(/\\n/g, "\n"));
 
     const results = await dsApi.requestJWTUserToken(
       dsJWTClientId,
