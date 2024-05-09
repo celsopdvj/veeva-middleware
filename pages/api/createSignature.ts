@@ -21,24 +21,46 @@ const sendEnvelope = async (args: any) => {
   // args.accessToken
   // args.accountId
 
-  let dsApiClient = new docusign.ApiClient();
-  dsApiClient.setBasePath(args.basePath);
-  dsApiClient.addDefaultHeader("Authorization", "Bearer " + args.accessToken);
-  let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
-  let results = null;
+  try {
+    let dsApiClient = new docusign.ApiClient();
+    dsApiClient.setBasePath(args.basePath);
+    dsApiClient.addDefaultHeader("Authorization", "Bearer " + args.accessToken);
+    let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
+    let results = null;
 
-  // Make the envelope request body
-  let envelope = makeEnvelope(args.envelopeArgs);
+    // Make the envelope request body
+    let envelope = makeEnvelope(args.envelopeArgs);
 
-  // Call the Envelopes::create API method
-  // Exceptions will be caught by the calling function
-  results = await envelopesApi.createEnvelope(args.accountId, {
-    envelopeDefinition: envelope,
-  });
-  let envelopeId = results.envelopeId;
+    // Call the Envelopes::create API method
+    // Exceptions will be caught by the calling function
+    results = await envelopesApi.createEnvelope(args.accountId, {
+      envelopeDefinition: envelope,
+    });
+    let envelopeId = results.envelopeId ?? "";
 
-  console.log(`Envelope was created. EnvelopeId ${envelopeId}`);
-  return { envelopeId: envelopeId };
+    const senderUrl = await envelopesApi.createSenderView(
+      args.accountId,
+      envelopeId,
+      {
+        returnUrlRequest: {
+          returnUrl: "http://localhost:3000/WaitSignatures",
+        },
+      }
+    );
+
+    return {
+      success: true,
+      data: {
+        envelopeId,
+        senderUrl: senderUrl.url,
+      },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      data: error.message,
+    };
+  }
 };
 //ds-snippet-end:eSign2Step3
 
