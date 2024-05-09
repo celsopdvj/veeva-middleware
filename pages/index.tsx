@@ -14,14 +14,22 @@ export default function Home() {
   const userEmail = router.get("userEmail");
 
   const [auth, setAuth] = useState<any>({});
+  const [error, setError] = useState("");
 
   const handleAuth = async () => {
+    setError("");
     const req = await fetch("/api/authDocusign");
+
     let accountInfo = await req.json();
-    setAuth(accountInfo.data);
+    if (accountInfo.success) {
+      setAuth(accountInfo.data);
+    } else {
+      setError(accountInfo.data);
+    }
   };
 
   const handleSend = async () => {
+    setError("");
     let envelopeId = await fetch(
       `/api/createSignature?accessToken=${auth.accessToken}&basePath=${auth.basePath}&accountId=${auth.apiAccountId}`
     );
@@ -44,6 +52,7 @@ export default function Home() {
       <li>
         <button onClick={handleSend}>Send</button>
       </li>
+      <li>{error}</li>
     </ul>
   );
 }
