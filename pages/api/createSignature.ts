@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import docusign from "docusign-esign";
+import docusign, { ReturnUrlRequest } from "docusign-esign";
 
 export default async function handler(
   req: NextApiRequest,
@@ -43,7 +43,10 @@ const sendEnvelope = async (args: any) => {
       envelopeId,
       {
         returnUrlRequest: {
-          returnUrl: "http://localhost:3000/WaitSignatures",
+          returnUrl: `${process.env.APP_URL}/WaitSignatures`,
+          settings: {
+            showHeaderActions: false,
+          },
         },
       }
     );
