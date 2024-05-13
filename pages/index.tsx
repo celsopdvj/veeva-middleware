@@ -77,7 +77,10 @@ export default function Home() {
         {envelope.senderUrl ? (
           <iframe
             className="w-full aspect-video"
-            src={envelope.senderUrl}
+            src={
+              envelope.senderUrl +
+              "&showHeaderActions=false&showEditDocuments=false&showEditDocumentVisibility=false&showEditPages=false&showDiscardAction=false&send=0"
+            }
           ></iframe>
         ) : (
           <div>
