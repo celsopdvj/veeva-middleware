@@ -14,6 +14,7 @@ export default async function handler(
     query.basePath as string,
     query.accessToken as string,
     query.accountId as string,
+    query.name as string,
     fileBase64
   );
 
@@ -24,6 +25,7 @@ const sendEnvelope = async (
   basePath: string,
   accessToken: string,
   accountId: string,
+  fileName: string,
   fileBase64: string
 ) => {
   try {
@@ -34,7 +36,7 @@ const sendEnvelope = async (
     let results = null;
 
     // Make the envelope request body
-    let envelope = makeEnvelope(fileBase64);
+    let envelope = makeEnvelope(fileName, fileBase64);
 
     // Call the Envelopes::create API method
     // Exceptions will be caught by the calling function
@@ -71,7 +73,7 @@ const sendEnvelope = async (
   }
 };
 
-function makeEnvelope(fileBase64: string) {
+function makeEnvelope(fileName: string, fileBase64: string) {
   // create the envelope definition
   let env: any = {};
   env.emailSubject = "Please sign this document set";
@@ -79,7 +81,7 @@ function makeEnvelope(fileBase64: string) {
   // add the documents
   let doc1: any = {};
   doc1.documentBase64 = fileBase64;
-  doc1.name = "File 1";
+  doc1.name = fileName;
   doc1.fileExtension = "pdf";
   doc1.documentId = "1";
 

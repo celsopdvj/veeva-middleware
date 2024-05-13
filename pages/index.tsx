@@ -34,7 +34,7 @@ export default function Home() {
       `/api/getVeevaDocument?sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}`
     );
 
-    let documentInfoResponse = await documentReq.text();
+    let documentInfoResponse = await documentReq.json();
     if (documentInfoResponse) {
       setDocumentInfo(documentInfoResponse);
     } else {
@@ -54,9 +54,9 @@ export default function Home() {
     }
 
     const signatureReq = await fetch(
-      `/api/createSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}`,
+      `/api/createSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&name=${documentInfoResponse.name}`,
       {
-        body: documentInfoResponse,
+        body: documentInfoResponse.content,
         method: "POST",
       }
     );

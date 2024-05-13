@@ -9,16 +9,25 @@ export default async function handler(
   const vaultUrl =
     "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3";
 
-  const documentResponse = await getDocument(
+  const documentResponse = await getDocumentRendition(
     vaultUrl,
     query.sessionId as string,
     query.documentId as string
   );
 
-  return res.status(200).send(documentResponse);
+  const documentInfo = await getDocumentData(
+    vaultUrl,
+    query.sessionId as string,
+    query.documentId as string
+  );
+
+  return res.status(200).send({
+    name: documentInfo,
+    content: documentResponse,
+  });
 }
 
-const getDocument = async (
+const getDocumentRendition = async (
   vaultUrl: string,
   sessionId: string,
   documentId: string
@@ -35,6 +44,30 @@ const getDocument = async (
     )
       .then((r) => r.arrayBuffer())
       .then((b) => Buffer.from(b).toString("base64"));
+
+    return fetchResponse;
+  } catch (error: any) {
+    return null;
+  }
+};
+
+const getDocumentData = async (
+  vaultUrl: string,
+  sessionId: string,
+  documentId: string
+) => {
+  try {
+    const fetchResponse = await fetch(
+      `${vaultUrl}/objects/documents/${documentId}`,
+      {
+        headers: {
+          Authorization: sessionId,
+          Accept: "application/json",
+        },
+      }
+    )
+      .then((r) => r.json())
+      .then((r) => r.document.name__v);
 
     return fetchResponse;
   } catch (error: any) {
