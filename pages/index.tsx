@@ -1,20 +1,11 @@
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Home() {
-  const router = useSearchParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const docId = router.get("docId");
-  // const majVer = router.get("majVer");
-  // const minVer = router.get("minVer");
-  // const vaultid = router.get("vaultid");
-  // const latestVersion = router.get("latestVersion");
-  // const userId = router.get("userId");
-  // const userEmail = router.get("userEmail");
-
-  const [docusignAuth, setDocusignAuth] = useState<any>({});
-  const [veevaAuth, setVeevaAuth] = useState<any>({});
-  const [documentInfo, setDocumentInfo] = useState<any>({});
+  const docId = searchParams.get("docId");
   const [error, setError] = useState("");
   const [envelope, setEnvelope] = useState<any>({});
 
@@ -23,9 +14,7 @@ export default function Home() {
     const veevaAuthReq = await fetch("/api/authVeeva");
 
     let veevaAuthInfo = await veevaAuthReq.json();
-    if (veevaAuthInfo.success) {
-      setVeevaAuth(veevaAuthInfo.data);
-    } else {
+    if (!veevaAuthInfo.success) {
       setError(veevaAuthInfo.data);
       return;
     }
@@ -35,20 +24,21 @@ export default function Home() {
     );
 
     let documentInfoResponse = await documentReq.json();
-    if (documentInfoResponse) {
-      setDocumentInfo(documentInfoResponse);
-    } else {
-      setError(documentInfoResponse);
+    if (!documentInfoResponse) {
+      setError("Document not found");
       return;
     }
 
     setError("");
-    const docusignAuthReq = await fetch("/api/authDocusign");
+    const docusignAuthReq = await fetch(
+      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}`
+    );
 
     let accountInfo = await docusignAuthReq.json();
-    if (accountInfo.success) {
-      setDocusignAuth(accountInfo.data);
-    } else {
+    if (!accountInfo.success) {
+      if (accountInfo.consent) {
+        router.push(accountInfo.data);
+      }
       setError(accountInfo.data);
       return;
     }

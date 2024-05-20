@@ -1,30 +1,38 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import docusign from "docusign-esign";
-import fs from "fs";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const auth = await authenticate();
+  const query = req.query;
 
-  console.log(auth);
+  const authDetails = await getAuthDetails(query.sessionId as string);
+  if (!authDetails.success) {
+    res.status(200).json(authDetails);
+    return;
+  }
 
+  const { authentication_url__c, client_id__c, private_key__c, user_id__c } =
+    authDetails.data;
+
+  const auth = await authenticate(
+    client_id__c,
+    authentication_url__c,
+    private_key__c,
+    user_id__c
+  );
   res.status(200).json(auth);
 }
 
 const SCOPES = ["signature", "impersonation"];
-const dsJWTClientId = process.env.DOCUSIGN_CLIENT_ID ?? "";
-const dsOauthServer = process.env.DOCUSIGN_AUTH_URL ?? "";
-const privateKey = process.env.DOCUSIGN_PRIVATE_KEY ?? "";
-const impersonatedUserGuid = process.env.DOCUSIGN_IMPERSONATE_USER_ID ?? "";
 
-function getConsent() {
+function getConsent(dsJWTClientId: string, dsOauthServer: string) {
   try {
     var urlScopes = SCOPES.join("+");
 
     // Construct consent URL
-    var redirectUri = "/";
+    var redirectUri = process.env.APP_URL;
     var consentUrl =
       `${dsOauthServer}/oauth/auth?response_type=code&` +
       `scope=${urlScopes}&client_id=${dsJWTClientId}&` +
@@ -32,6 +40,7 @@ function getConsent() {
 
     return {
       success: false,
+      consent: true,
       data: consentUrl,
     };
   } catch (error: any) {
@@ -42,7 +51,20 @@ function getConsent() {
   }
 }
 
-async function authenticate() {
+async function getAuthDetails(sessionId: string) {
+  const authDetails = await fetch(
+    `${process.env.APP_URL}/api/getDocusignAuthConfig?sessionId=${sessionId}`
+  );
+
+  return authDetails.json();
+}
+
+async function authenticate(
+  dsJWTClientId: string,
+  dsOauthServer: string,
+  privateKey: string,
+  impersonatedUserGuid: string
+) {
   try {
     const jwtLifeSec = 10 * 60; // requested lifetime for the JWT is 10 min
     const dsApi = new docusign.ApiClient();
@@ -79,7 +101,7 @@ async function authenticate() {
     // Determine the source of the error
     if (body && body.error && body.error === "consent_required") {
       // The user needs to grant consent
-      return getConsent();
+      return getConsent(dsJWTClientId, dsOauthServer);
     }
     return {
       success: false,

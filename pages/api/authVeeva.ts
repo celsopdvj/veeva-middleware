@@ -4,8 +4,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const query = req.query;
-
   const username = "docusign_integration@partnersi-usdm.com";
   const password = "Vault2024!";
 
