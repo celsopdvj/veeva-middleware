@@ -44,7 +44,7 @@ export default function Home() {
     }
 
     const signatureReq = await fetch(
-      `/api/createSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&name=${documentInfoResponse.name}`,
+      `/api/createSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&name=${documentInfoResponse.name}&sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}`,
       {
         body: documentInfoResponse.content,
         method: "POST",

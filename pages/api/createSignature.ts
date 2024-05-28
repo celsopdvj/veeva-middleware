@@ -15,6 +15,8 @@ export default async function handler(
     query.accessToken as string,
     query.accountId as string,
     query.name as string,
+    query.sessionId as string,
+    query.documentId as string,
     fileBase64
   );
 
@@ -26,6 +28,8 @@ const sendEnvelope = async (
   accessToken: string,
   accountId: string,
   fileName: string,
+  sessionId: string,
+  documentId: string,
   fileBase64: string
 ) => {
   try {
@@ -57,6 +61,19 @@ const sendEnvelope = async (
         },
       }
     );
+
+    const updateData = await updateDocumentData(
+      "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3",
+      sessionId,
+      documentId,
+      envelopeId
+    );
+
+    console.log(updateData);
+
+    if (!updateData.success) {
+      return updateData;
+    }
 
     return {
       success: true,
@@ -90,3 +107,32 @@ function makeEnvelope(fileName: string, fileBase64: string) {
 
   return env;
 }
+
+const updateDocumentData = async (
+  vaultUrl: string,
+  sessionId: string,
+  documentId: string,
+  envelopeId: string
+) => {
+  try {
+    await fetch(`${vaultUrl}/objects/documents/${documentId}`, {
+      headers: {
+        Authorization: sessionId,
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      method: "PUT",
+      body: `envelope_id__c=${envelopeId}&signature_status__c=Waiting Signatures`,
+    }).then((r) => r.json());
+
+    return {
+      success: true,
+      data: "Document Updated",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      data: error.message,
+    };
+  }
+};
