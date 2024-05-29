@@ -6,6 +6,8 @@ export default function Home() {
   const router = useRouter();
 
   const docId = searchParams.get("docId");
+  const majVer = searchParams.get("majVer");
+  const minVer = searchParams.get("minVer");
   const [error, setError] = useState("");
   const [envelope, setEnvelope] = useState<any>({});
 
@@ -44,7 +46,7 @@ export default function Home() {
     }
 
     const signatureReq = await fetch(
-      `/api/createSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&name=${documentInfoResponse.name}&sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}`,
+      `/api/createSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&name=${documentInfoResponse.name}&sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}`,
       {
         body: documentInfoResponse.content,
         method: "POST",

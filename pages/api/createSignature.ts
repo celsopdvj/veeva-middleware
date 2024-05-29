@@ -17,6 +17,8 @@ export default async function handler(
     query.name as string,
     query.sessionId as string,
     query.documentId as string,
+    query.majorVersion as string,
+    query.minorVersion as string,
     fileBase64
   );
 
@@ -30,6 +32,8 @@ const sendEnvelope = async (
   fileName: string,
   sessionId: string,
   documentId: string,
+  majorVersion: string,
+  minorVersion: string,
   fileBase64: string
 ) => {
   try {
@@ -69,9 +73,19 @@ const sendEnvelope = async (
       envelopeId
     );
 
-    console.log(updateData);
-
     if (!updateData.success) {
+      return updateData;
+    }
+
+    const updateStatusData = await updateDocumentStatus(
+      "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3",
+      sessionId,
+      documentId,
+      majorVersion,
+      minorVersion
+    );
+
+    if (!updateStatusData.success) {
       return updateData;
     }
 
@@ -128,6 +142,40 @@ const updateDocumentData = async (
     return {
       success: true,
       data: "Document Updated",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      data: error.message,
+    };
+  }
+};
+
+const updateDocumentStatus = async (
+  vaultUrl: string,
+  sessionId: string,
+  documentId: string,
+  majorVersion: string,
+  minorVersion: string
+) => {
+  try {
+    const fethData = await fetch(
+      `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/send_to_docusign__c`,
+      {
+        headers: {
+          Authorization: sessionId,
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method: "PUT",
+      }
+    ).then((r) => r.json());
+
+    console.log(fethData);
+
+    return {
+      success: true,
+      data: "Document State Updated",
     };
   } catch (error: any) {
     return {
