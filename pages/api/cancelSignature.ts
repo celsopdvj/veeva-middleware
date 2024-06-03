@@ -85,7 +85,7 @@ const updateDocumentStatus = async (
   minorVersion: string
 ) => {
   try {
-    const fethData = await fetch(
+    await fetch(
       `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/send_to_ready_for_approval__c`,
       {
         headers: {
@@ -96,8 +96,6 @@ const updateDocumentStatus = async (
         method: "PUT",
       }
     ).then((r) => r.json());
-
-    console.log(fethData);
 
     return {
       success: true,
@@ -124,8 +122,10 @@ const cancelDocusign = async (
     let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
 
     const data = await envelopesApi.update(accountId, envelopeId, {
-      status: "voided",
-      voidedReason: "Canceled by the Veeva user",
+      envelope: {
+        status: "voided",
+        voidedReason: "Canceled by the Veeva user",
+      },
     });
 
     console.log(data);

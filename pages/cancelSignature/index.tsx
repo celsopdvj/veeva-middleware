@@ -14,6 +14,10 @@ export default function CancelSignature() {
   const [message, setMessage] = useState("Cancelling...");
 
   const handleCancelSignature = useCallback(async () => {
+    if (!docId?.length || docId?.length == 0) {
+      return;
+    }
+
     const veevaAuthReq = await fetch("/api/authVeeva");
 
     let veevaAuthInfo = await veevaAuthReq.json();
@@ -29,7 +33,9 @@ export default function CancelSignature() {
     let accountInfo = await docusignAuthReq.json();
     if (!accountInfo.success) {
       if (accountInfo.consent) {
-        router.push(`/consent?consentUrl=${veevaAuthInfo.data}`);
+        router.push(
+          `/consent?consentUrl=${encodeURIComponent(accountInfo.data)}`
+        );
       }
       setMessage(accountInfo.data);
       return;
