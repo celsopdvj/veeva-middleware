@@ -39,7 +39,7 @@ export default function Home() {
     let accountInfo = await docusignAuthReq.json();
     if (!accountInfo.success) {
       if (accountInfo.consent) {
-        router.push(accountInfo.data);
+        router.push(`/consent?consentUrl=${veevaAuthInfo.data}`);
       }
       setError(accountInfo.data);
       return;

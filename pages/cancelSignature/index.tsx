@@ -1,8 +1,10 @@
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 export default function CancelSignature() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const docId = searchParams.get("docId");
   const majVer = searchParams.get("majVer");
@@ -20,8 +22,21 @@ export default function CancelSignature() {
       return;
     }
 
+    const docusignAuthReq = await fetch(
+      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}`
+    );
+
+    let accountInfo = await docusignAuthReq.json();
+    if (!accountInfo.success) {
+      if (accountInfo.consent) {
+        router.push(`/consent?consentUrl=${veevaAuthInfo.data}`);
+      }
+      setMessage(accountInfo.data);
+      return;
+    }
+
     const documentReq = await fetch(
-      `/api/cancelSignature?sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}&envelopeId=${envelopeId}`
+      `/api/cancelSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}&envelopeId=${envelopeId}`
     );
 
     let documentInfoResponse = await documentReq.json();
@@ -31,7 +46,7 @@ export default function CancelSignature() {
     }
 
     setMessage("Signature request cancelled");
-  }, [docId, majVer, minVer, envelopeId]);
+  }, [docId, majVer, minVer, envelopeId, router]);
 
   useEffect(() => {
     handleCancelSignature();

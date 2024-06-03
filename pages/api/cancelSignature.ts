@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import docusign from "docusign-esign";
 
 export default async function handler(
   req: NextApiRequest,
@@ -29,6 +30,17 @@ export default async function handler(
 
   if (!documentStatusInfo.success) {
     return res.status(200).send(documentStatusInfo);
+  }
+
+  const cancelDocusignResult = await cancelDocusign(
+    query.basePath as string,
+    query.accessToken as string,
+    query.accountId as string,
+    query.envelopeId as string
+  );
+
+  if (!cancelDocusignResult.success) {
+    return res.status(200).send(cancelDocusignResult);
   }
 
   return res.status(200).send({
@@ -90,6 +102,37 @@ const updateDocumentStatus = async (
     return {
       success: true,
       data: "Document State Updated",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      data: error.message,
+    };
+  }
+};
+
+const cancelDocusign = async (
+  basePath: string,
+  accessToken: string,
+  accountId: string,
+  envelopeId: string
+) => {
+  try {
+    let dsApiClient = new docusign.ApiClient();
+    dsApiClient.setBasePath(basePath);
+    dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
+    let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
+
+    const data = await envelopesApi.update(accountId, envelopeId, {
+      status: "voided",
+      voidedReason: "Canceled by the Veeva user",
+    });
+
+    console.log(data);
+
+    return {
+      success: true,
+      data: "Envelope voided",
     };
   } catch (error: any) {
     return {
