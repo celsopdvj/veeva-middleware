@@ -32,7 +32,7 @@ function getConsent(dsJWTClientId: string, dsOauthServer: string) {
     var urlScopes = SCOPES.join("+");
 
     // Construct consent URL
-    var redirectUri = process.env.APP_URL;
+    var redirectUri = `${process.env.APP_URL}/consent/success`;
     var consentUrl =
       `${dsOauthServer}/oauth/auth?response_type=code&` +
       `scope=${urlScopes}&client_id=${dsJWTClientId}&` +
