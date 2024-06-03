@@ -89,11 +89,15 @@ const sendEnvelope = async (
       return updateData;
     }
 
+    const formattedSenderUrl = senderUrl.url
+      ? senderUrl.url.replace("send=1", "send=0")
+      : "";
+
     return {
       success: true,
       data: {
         envelopeId,
-        senderUrl: senderUrl.url,
+        senderUrl: formattedSenderUrl,
       },
     };
   } catch (error: any) {
@@ -159,7 +163,7 @@ const updateDocumentStatus = async (
   minorVersion: string
 ) => {
   try {
-    const fethData = await fetch(
+    await fetch(
       `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/send_to_docusign__c`,
       {
         headers: {
@@ -170,8 +174,6 @@ const updateDocumentStatus = async (
         method: "PUT",
       }
     ).then((r) => r.json());
-
-    console.log(fethData);
 
     return {
       success: true,
