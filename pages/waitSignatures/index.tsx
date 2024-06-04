@@ -6,8 +6,11 @@ export default function WaitSignatures() {
   const [isUpdatingDocument, setIsUpdatingDocument] = useState(false);
 
   const docId = searchParams.get("docId");
+  const majorVersion = searchParams.get("majorVersion");
+  const minorVersion = searchParams.get("minorVersion");
 
   const handleUpdateDocument = useCallback(async () => {
+    if ((docId?.length ?? 0) == 0) return;
     setIsUpdatingDocument(true);
     const veevaAuthReq = await fetch("/api/authVeeva");
 
@@ -17,11 +20,11 @@ export default function WaitSignatures() {
     }
 
     await fetch(
-      `/api/setDocumentSignaturaPrepared?sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}`
+      `/api/setDocumentSignaturaPrepared?sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}&majorVersion=${majorVersion}&minorVersion=${minorVersion}`
     );
 
     setIsUpdatingDocument(false);
-  }, [docId]);
+  }, [docId, majorVersion, minorVersion]);
 
   useEffect(() => {
     handleUpdateDocument();
