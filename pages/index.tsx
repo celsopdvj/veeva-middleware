@@ -19,9 +19,9 @@ export default function Home() {
     null
   );
 
-  const isEnvelopeIdFilled =
-    envelopeId && envelopeId.length && envelopeId?.length >= 0;
-  const shouldDisableButton = isAuthenticating || isEnvelopeIdFilled;
+  const isEnvelopeIdFilled = (envelopeId?.length ?? 0) > 0;
+  const shouldDisableButton =
+    isAuthenticating || isEnvelopeIdFilled || isFetchingSenderUrl;
 
   const buttonMessage = () => {
     if (isAuthenticating) return "Authenticating";
@@ -31,6 +31,8 @@ export default function Home() {
   };
 
   const handleAuth = useCallback(async () => {
+    if (!docId?.length || docId?.length == 0) return;
+
     setError("");
     const veevaAuthReq = await fetch("/api/authVeeva");
 
@@ -63,9 +65,14 @@ export default function Home() {
     setDocuSignAuthDetails(accountInfo.data);
 
     setIsAuthenticating(false);
-  }, [router]);
+  }, [router, docId]);
 
   const handleCreateSenderView = useCallback(async () => {
+    if (!envelopeId?.length || envelopeId?.length == 0) return;
+    if (!docuSignAuthDetails) return;
+
+    setIsFetchingSenderUrl(true);
+
     const senderViewReq = await fetch(
       `/api/getSenderView?accessToken=${docuSignAuthDetails.accessToken}&basePath=${docuSignAuthDetails.basePath}&accountId=${docuSignAuthDetails.apiAccountId}&envelopeId=${envelopeId}`
     );
@@ -82,21 +89,14 @@ export default function Home() {
   }, [docuSignAuthDetails, envelopeId]);
 
   useEffect(() => {
-    if (!docId?.length || docId?.length == 0) {
-      return;
-    }
-
     handleAuth();
+  }, [handleAuth]);
 
-    if (!envelopeId?.length || envelopeId?.length == 0) {
-      setIsFetchingSenderUrl(true);
-      handleCreateSenderView();
-    }
-  }, [handleAuth, handleCreateSenderView, docId, envelopeId]);
+  useEffect(() => {
+    !isAuthenticating && handleCreateSenderView();
+  }, [handleCreateSenderView, isAuthenticating]);
 
   const handleCreateSignature = async () => {
-    setIsFetchingSenderUrl(true);
-
     const documentReq = await fetch(
       `/api/getVeevaDocument?sessionId=${veevaAuthDetails.sessionId}&documentId=${docId}`
     );
@@ -104,7 +104,6 @@ export default function Home() {
     let documentInfoResponse = await documentReq.json();
     if (!documentInfoResponse) {
       setError("Document not found");
-      setIsFetchingSenderUrl(false);
       return;
     }
 
@@ -123,8 +122,6 @@ export default function Home() {
     } else {
       setError(envelopeData.data);
     }
-
-    setIsFetchingSenderUrl(false);
   };
 
   return (

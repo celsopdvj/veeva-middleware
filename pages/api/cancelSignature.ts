@@ -62,7 +62,7 @@ const updateDocumentData = async (
         "Content-Type": "application/x-www-form-urlencoded",
       },
       method: "PUT",
-      body: `envelope_id__c=null&signature_status__c=Signature Request Cancelled`,
+      body: `envelope_id__c=null&signature_status__c=Signature Request Cancelled&signature_request_sent__c=false`,
     }).then((r) => r.json());
 
     return {

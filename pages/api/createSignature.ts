@@ -58,7 +58,7 @@ const sendEnvelope = async (
       envelopeId,
       {
         returnUrlRequest: {
-          returnUrl: `${process.env.APP_URL}/WaitSignatures`,
+          returnUrl: `${process.env.APP_URL}/waitSignatures?docId=${documentId}`,
           settings: {
             showHeaderActions: false,
           },
@@ -133,15 +133,20 @@ const updateDocumentData = async (
   envelopeId: string
 ) => {
   try {
-    await fetch(`${vaultUrl}/objects/documents/${documentId}`, {
-      headers: {
-        Authorization: sessionId,
-        Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      method: "PUT",
-      body: `envelope_id__c=${envelopeId}&signature_status__c=Waiting Signatures`,
-    }).then((r) => r.json());
+    const updateResponse = await fetch(
+      `${vaultUrl}/objects/documents/${documentId}`,
+      {
+        headers: {
+          Authorization: sessionId,
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method: "PUT",
+        body: `envelope_id__c=${envelopeId}&signature_status__c=Waiting Signatures&signature_request_sent__c=false`,
+      }
+    ).then((r) => r.json());
+
+    console.log(updateResponse);
 
     return {
       success: true,
