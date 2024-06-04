@@ -44,13 +44,21 @@ const sendEnvelope = async (
     let results = null;
 
     // Make the envelope request body
-    let envelope = makeEnvelope(fileName, fileBase64);
+    let envelope = makeEnvelope(
+      fileName,
+      fileBase64,
+      documentId,
+      "61653",
+      majorVersion,
+      minorVersion
+    );
 
     // Call the Envelopes::create API method
     // Exceptions will be caught by the calling function
     results = await envelopesApi.createEnvelope(accountId, {
       envelopeDefinition: envelope,
     });
+
     let envelopeId = results.envelopeId ?? "";
 
     const senderUrl = await envelopesApi.createSenderView(
@@ -96,7 +104,14 @@ const sendEnvelope = async (
   }
 };
 
-function makeEnvelope(fileName: string, fileBase64: string) {
+function makeEnvelope(
+  fileName: string,
+  fileBase64: string,
+  documentId: string,
+  vaultId: string,
+  majorVersion: string,
+  minorVersion: string
+) {
   // create the envelope definition
   let env: any = {};
   env.emailSubject = "Please sign this document set";
@@ -110,6 +125,31 @@ function makeEnvelope(fileName: string, fileBase64: string) {
 
   // The order in the docs array determines the order in the envelope
   env.documents = [doc1];
+
+  env.customFields = {
+    textCustomFields: [
+      {
+        name: "docId",
+        value: documentId,
+        show: false,
+      },
+      {
+        name: "vaultId",
+        value: vaultId,
+        show: false,
+      },
+      {
+        name: "majorVersion",
+        value: majorVersion,
+        show: false,
+      },
+      {
+        name: "minorVersion",
+        value: minorVersion,
+        show: false,
+      },
+    ],
+  };
 
   return env;
 }
