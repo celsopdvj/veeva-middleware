@@ -58,7 +58,7 @@ const sendEnvelope = async (
       envelopeId,
       {
         returnUrlRequest: {
-          returnUrl: `${process.env.APP_URL}/waitSignatures?docId=${documentId}`,
+          returnUrl: `${process.env.APP_URL}/waitSignatures?docId=${documentId}&majorVersion=${majorVersion}&minorVersion=${minorVersion}`,
           settings: {
             showHeaderActions: false,
           },
@@ -74,18 +74,6 @@ const sendEnvelope = async (
     );
 
     if (!updateData.success) {
-      return updateData;
-    }
-
-    const updateStatusData = await updateDocumentStatus(
-      "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3",
-      sessionId,
-      documentId,
-      majorVersion,
-      minorVersion
-    );
-
-    if (!updateStatusData.success) {
       return updateData;
     }
 
@@ -133,56 +121,19 @@ const updateDocumentData = async (
   envelopeId: string
 ) => {
   try {
-    const updateResponse = await fetch(
-      `${vaultUrl}/objects/documents/${documentId}`,
-      {
-        headers: {
-          Authorization: sessionId,
-          Accept: "application/json",
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        method: "PUT",
-        body: `envelope_id__c=${envelopeId}&signature_status__c=Waiting Signatures&signature_request_sent__c=false`,
-      }
-    ).then((r) => r.json());
-
-    console.log(updateResponse);
+    await fetch(`${vaultUrl}/objects/documents/${documentId}`, {
+      headers: {
+        Authorization: sessionId,
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      method: "PUT",
+      body: `envelope_id__c=${envelopeId}&signature_status__c=Waiting Signatures&signature_request_sent__c=false`,
+    }).then((r) => r.json());
 
     return {
       success: true,
       data: "Document Updated",
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      data: error.message,
-    };
-  }
-};
-
-const updateDocumentStatus = async (
-  vaultUrl: string,
-  sessionId: string,
-  documentId: string,
-  majorVersion: string,
-  minorVersion: string
-) => {
-  try {
-    await fetch(
-      `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/send_to_docusign__c`,
-      {
-        headers: {
-          Authorization: sessionId,
-          Accept: "application/json",
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        method: "PUT",
-      }
-    ).then((r) => r.json());
-
-    return {
-      success: true,
-      data: "Document State Updated",
     };
   } catch (error: any) {
     return {
