@@ -29,7 +29,7 @@ const getSenderView = async (
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
 
   const senderUrl = await envelopesApi.createSenderView(accountId, envelopeId, {
-    returnUrlRequest: {
+    envelopeViewRequest: {
       returnUrl: `${process.env.APP_URL}/WaitSignatures`,
       settings: {
         showHeaderActions: false,
