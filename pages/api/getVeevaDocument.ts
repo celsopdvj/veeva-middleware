@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { Readable } from "stream";
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,67 +10,45 @@ export default async function handler(
   const vaultUrl =
     "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3";
 
-  const documentResponse = await getDocumentRendition(
+  const documentResponse = await getDocumentContent(
     vaultUrl,
     query.sessionId as string,
     query.documentId as string
   );
 
-  const documentInfo = await getDocumentData(
-    vaultUrl,
-    query.sessionId as string,
-    query.documentId as string
-  );
+  if (!documentResponse?.file) {
+    res.send(404);
+    return;
+  }
 
-  return res.status(200).send({
-    name: documentInfo,
-    content: documentResponse,
-  });
+  const nodeReadableStream = Readable.from(documentResponse.file);
+  res.setHeader("Content-Disposition", documentResponse.fileName ?? "");
+  nodeReadableStream.pipe(res);
 }
 
-const getDocumentRendition = async (
+const getDocumentContent = async (
   vaultUrl: string,
   sessionId: string,
   documentId: string
 ) => {
   try {
     const fetchResponse = await fetch(
-      `${vaultUrl}/objects/documents/${documentId}/renditions/viewable_rendition__v`,
+      `${vaultUrl}/objects/documents/${documentId}/file`,
       {
         headers: {
           Authorization: sessionId,
           Accept: "application/json",
+          "Content-Type": "application/octet-stream; charset=UTF-8",
         },
       }
-    )
-      .then((r) => r.arrayBuffer())
-      .then((b) => Buffer.from(b).toString("base64"));
+    );
 
-    return fetchResponse;
-  } catch (error: any) {
-    return null;
-  }
-};
+    const header = fetchResponse.headers.get("Content-Disposition");
 
-const getDocumentData = async (
-  vaultUrl: string,
-  sessionId: string,
-  documentId: string
-) => {
-  try {
-    const fetchResponse = await fetch(
-      `${vaultUrl}/objects/documents/${documentId}`,
-      {
-        headers: {
-          Authorization: sessionId,
-          Accept: "application/json",
-        },
-      }
-    )
-      .then((r) => r.json())
-      .then((r) => r.document.name__v);
-
-    return fetchResponse;
+    return {
+      fileName: header,
+      file: fetchResponse.body as unknown as NodeJS.ReadableStream,
+    };
   } catch (error: any) {
     return null;
   }

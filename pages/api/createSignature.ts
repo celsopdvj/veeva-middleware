@@ -1,6 +1,17 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import docusign from "docusign-esign";
+import docusign, { EnvelopeDocument } from "docusign-esign";
+
+declare global {
+  class ApiClient {
+    updateDocument(
+      accountId: string,
+      envelopeId: string,
+      documentId: string,
+      callback?: (() => void) | ((error: any, data: any, response: any) => void)
+    ): Promise<EnvelopeDocument>;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -61,11 +72,13 @@ const sendEnvelope = async (
 
     let envelopeId = results.envelopeId ?? "";
 
+    await envelopesApi.updateDocument(fileBase64, accountId, envelopeId, "1");
+
     const senderUrl = await envelopesApi.createSenderView(
       accountId,
       envelopeId,
       {
-        returnUrlRequest: {
+        envelopeViewRequest: {
           returnUrl: `${process.env.APP_URL}/waitSignatures?docId=${documentId}&majorVersion=${majorVersion}&minorVersion=${minorVersion}`,
           settings: {
             showHeaderActions: false,
@@ -97,6 +110,7 @@ const sendEnvelope = async (
       },
     };
   } catch (error: any) {
+    console.log(error);
     return {
       success: false,
       data: error.message,
@@ -118,9 +132,9 @@ function makeEnvelope(
 
   // add the documents
   let doc1: any = {};
-  doc1.documentBase64 = fileBase64;
+  //doc1.documentBase64 = Buffer.from(fileBase64).toString("base64");
   doc1.name = fileName;
-  doc1.fileExtension = "pdf";
+  doc1.fileExtension = fileName.split(".").pop();
   doc1.documentId = "1";
 
   // The order in the docs array determines the order in the envelope
