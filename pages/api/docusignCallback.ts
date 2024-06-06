@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { authenticateVeeva } from "./common/functions";
 import docusign from "docusign-esign";
-import fs from "fs";
 
 export default async function handler(
   req: NextApiRequest,
@@ -190,11 +189,9 @@ const createDocumentAttachment = async (
   docId: string,
   vaultUrl: string
 ) => {
-  const form = new FormData();
-
-  fs.writeFileSync(fileName, fileContent, "binary");
-
-  form.append("file", new Blob([fs.readFileSync(fileName)]), fileName);
+  const myBlob = new Blob([fileContent]);
+  const formData = new FormData();
+  formData.append("file", myBlob, fileName);
 
   const response = await fetch(
     `${vaultUrl}/objects/documents/${docId}/attachments`,
@@ -204,11 +201,9 @@ const createDocumentAttachment = async (
         Accept: "*/*",
       },
       method: "POST",
-      body: form,
+      body: formData,
     }
   ).then((r) => r.json());
-
-  fs.unlinkSync(fileName);
 
   return response;
 };
@@ -220,11 +215,9 @@ const createDocumentRendition = async (
   docId: string,
   vaultUrl: string
 ) => {
-  const form = new FormData();
-
-  fs.writeFileSync(fileName, fileContent, "binary");
-
-  form.append("file", new Blob([fs.readFileSync(fileName)]), fileName);
+  const myBlob = new Blob([fileContent]);
+  const formData = new FormData();
+  formData.append("file", myBlob, fileName);
 
   const response = await fetch(
     `${vaultUrl}/objects/documents/${docId}/renditions/docusign_rendition__c`,
@@ -234,11 +227,9 @@ const createDocumentRendition = async (
         Accept: "*/*",
       },
       method: "POST",
-      body: form,
+      body: formData,
     }
   ).then((r) => r.json());
-
-  fs.unlinkSync(fileName);
 
   return response;
 };
