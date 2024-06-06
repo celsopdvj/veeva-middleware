@@ -64,7 +64,7 @@ const updateDocumentData = async (
         "Content-Type": "application/x-www-form-urlencoded",
       },
       method: "PUT",
-      body: `signatures_completed__c=true&completed_date__c=${completedAt}`,
+      body: `signatures_completed__c=true&completed_date__c=${completedAt}&signature_status__c=Completed`,
     }).then((r) => r.json());
 
     return {
