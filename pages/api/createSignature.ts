@@ -1,17 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import docusign, { EnvelopeDocument } from "docusign-esign";
-
-declare global {
-  class ApiClient {
-    updateDocument(
-      accountId: string,
-      envelopeId: string,
-      documentId: string,
-      callback?: (() => void) | ((error: any, data: any, response: any) => void)
-    ): Promise<EnvelopeDocument>;
-  }
-}
+import docusign from "docusign-esign";
+import fs from "fs";
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,22 +9,52 @@ export default async function handler(
 ) {
   const query = req.query;
 
-  const fileBase64 = req.body as string;
+  const fileDetails = await getDocument(
+    query.sessionId as string,
+    query.documentId as string
+  );
 
   const envolope = await sendEnvelope(
     query.basePath as string,
     query.accessToken as string,
     query.accountId as string,
-    query.name as string,
+    fileDetails.fileName ?? "",
     query.sessionId as string,
     query.documentId as string,
     query.majorVersion as string,
     query.minorVersion as string,
-    fileBase64
+    fileDetails.file
   );
 
   res.status(200).json(envolope);
 }
+
+const getDocument = async (sessionId: string, documentId: string) => {
+  const documentReq = await fetch(
+    `${process.env.APP_URL}/api/getVeevaDocument?sessionId=${sessionId}&documentId=${documentId}`
+  );
+
+  let documentInfoResponse = await documentReq.arrayBuffer();
+  if (!documentInfoResponse) {
+    return {
+      file: null,
+      fileName: null,
+    };
+  }
+
+  let fileName = "";
+  let header = documentReq.headers.get("Content-Disposition");
+  var filenameRegex = /filename[^;=\n]*=.*\'\'((['"]).*?\2|[^;\n]*)/;
+  var matches = filenameRegex.exec(header ?? "");
+  if (matches != null && matches[1]) {
+    fileName = matches[1].replace(/['"]/g, "");
+  }
+
+  return {
+    file: documentInfoResponse,
+    fileName: fileName,
+  };
+};
 
 const sendEnvelope = async (
   basePath: string,
@@ -45,7 +65,7 @@ const sendEnvelope = async (
   documentId: string,
   majorVersion: string,
   minorVersion: string,
-  fileBase64: string
+  fileBase64: ArrayBuffer | null
 ) => {
   try {
     let dsApiClient = new docusign.ApiClient();
@@ -72,7 +92,7 @@ const sendEnvelope = async (
 
     let envelopeId = results.envelopeId ?? "";
 
-    await envelopesApi.updateDocument(fileBase64, accountId, envelopeId, "1");
+    //await envelopesApi.updateDocument(fileBase64, accountId, envelopeId, "1");
 
     const senderUrl = await envelopesApi.createSenderView(
       accountId,
@@ -120,7 +140,7 @@ const sendEnvelope = async (
 
 function makeEnvelope(
   fileName: string,
-  fileBase64: string,
+  fileBase64: ArrayBuffer | null,
   documentId: string,
   vaultId: string,
   majorVersion: string,
@@ -132,7 +152,8 @@ function makeEnvelope(
 
   // add the documents
   let doc1: any = {};
-  //doc1.documentBase64 = Buffer.from(fileBase64).toString("base64");
+  fileBase64 &&
+    (doc1.documentBase64 = Buffer.from(fileBase64).toString("base64"));
   doc1.name = fileName;
   doc1.fileExtension = fileName.split(".").pop();
   doc1.documentId = "1";
