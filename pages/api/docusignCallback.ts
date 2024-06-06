@@ -1,4 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { authenticateVeeva } from "./common/functions";
+import docusign from "docusign-esign";
+import fs from "fs";
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,6 +15,7 @@ export default async function handler(
 
   const bodyData = req.body.data.envelopeSummary;
   const customFields: any[] = bodyData.customFields.textCustomFields;
+  const envelopeId = req.body.data.envelopeId;
   const docId = customFields.find((p) => p.name == "docId").value;
   const vaultId = customFields.find((p) => p.name == "vaultId").value;
   const majorVersion = customFields.find((p) => p.name == "majorVersion").value;
@@ -45,6 +49,22 @@ export default async function handler(
     docId,
     majorVersion,
     minorVersion
+  );
+
+  const docusignAuthReq = await fetch(
+    `${process.env.APP_URL}/api/authDocusign?sessionId=${sessionId}`
+  );
+
+  const docusignAuth = await docusignAuthReq.json();
+
+  await uploadSignedDocuments(
+    docusignAuth.data.basePath,
+    docusignAuth.data.accessToken,
+    docusignAuth.data.apiAccountId,
+    envelopeId,
+    vaultUrl,
+    docId,
+    sessionId
   );
 
   res.status(200).json(updateDocStatus.data);
@@ -111,29 +131,114 @@ const updateDocumentStatus = async (
   }
 };
 
-const authenticateVeeva = async (
+const uploadSignedDocuments = async (
+  basePath: string,
+  accessToken: string,
+  accountId: string,
+  envelopeId: string,
   vaultUrl: string,
-  username: string,
-  password: string
+  veevaDocId: string,
+  sessionId: string
 ) => {
-  try {
-    const response = await fetch(`${vaultUrl}/auth`, {
+  let dsApiClient = new docusign.ApiClient();
+  dsApiClient.setBasePath(basePath);
+  dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
+  let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
+
+  const envelopeDocumentsResponse = await envelopesApi.listDocuments(
+    accountId,
+    envelopeId
+  );
+  let envelopeDocuments = envelopeDocumentsResponse.envelopeDocuments;
+
+  if (envelopeDocuments) {
+    for (const i in envelopeDocuments) {
+      const documentId = envelopeDocuments[i].documentId;
+
+      const document = await envelopesApi.getDocument(
+        accountId,
+        envelopeId,
+        documentId ?? "",
+        {}
+      );
+
+      if (documentId === "certificate") {
+        await createDocumentAttachment(
+          sessionId,
+          "certificate.pdf",
+          document,
+          veevaDocId,
+          vaultUrl
+        );
+      } else {
+        await createDocumentRendition(
+          sessionId,
+          "signed.pdf",
+          document,
+          veevaDocId,
+          vaultUrl
+        );
+      }
+    }
+  }
+};
+
+const createDocumentAttachment = async (
+  sessionId: string,
+  fileName: any,
+  fileContent: string,
+  docId: string,
+  vaultUrl: string
+) => {
+  const form = new FormData();
+
+  fs.writeFileSync(fileName, fileContent, "binary");
+
+  form.append("file", new Blob([fs.readFileSync(fileName)]), fileName);
+
+  const response = await fetch(
+    `${vaultUrl}/objects/documents/${docId}/attachments`,
+    {
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "application/json",
+        Authorization: sessionId,
+        Accept: "*/*",
       },
       method: "POST",
-      body: `username=${username}&password=${password}`,
-    });
+      body: form,
+    }
+  ).then((r) => r.json());
 
-    return {
-      success: true,
-      data: await response.json(),
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      data: error.message,
-    };
-  }
+  fs.unlinkSync(fileName);
+
+  return response;
+};
+
+const createDocumentRendition = async (
+  sessionId: string,
+  fileName: any,
+  fileContent: string,
+  docId: string,
+  vaultUrl: string
+) => {
+  const form = new FormData();
+
+  fs.writeFileSync(fileName, fileContent, "binary");
+
+  form.append("file", new Blob([fs.readFileSync(fileName)]), fileName);
+
+  const response = await fetch(
+    `${vaultUrl}/objects/documents/${docId}/renditions/docusign_rendition__c`,
+    {
+      headers: {
+        Authorization: sessionId,
+        Accept: "*/*",
+      },
+      method: "POST",
+      body: form,
+    }
+  ).then((r) => r.json());
+
+  fs.unlinkSync(fileName);
+
+  return response;
 };

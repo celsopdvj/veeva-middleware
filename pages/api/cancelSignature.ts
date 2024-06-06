@@ -128,8 +128,6 @@ const cancelDocusign = async (
       },
     });
 
-    console.log(data);
-
     return {
       success: true,
       data: "Envelope voided",

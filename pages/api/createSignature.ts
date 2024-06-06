@@ -130,7 +130,6 @@ const sendEnvelope = async (
       },
     };
   } catch (error: any) {
-    console.log(error);
     return {
       success: false,
       data: error.message,
