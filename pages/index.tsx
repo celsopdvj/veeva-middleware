@@ -97,28 +97,9 @@ export default function Home() {
   }, [handleCreateSenderView, isAuthenticating]);
 
   const handleCreateSignature = async () => {
-    const documentReq = await fetch(
-      `/api/getVeevaDocument?sessionId=${veevaAuthDetails.sessionId}&documentId=${docId}`
-    );
-
-    let documentInfoResponse = await documentReq.text();
-    if (!documentInfoResponse) {
-      setError("Document not found");
-      return;
-    }
-
-    let fileName = "";
-    let header = documentReq.headers.get("Content-Disposition");
-    var filenameRegex = /filename[^;=\n]*=.*\'\'((['"]).*?\2|[^;\n]*)/;
-    var matches = filenameRegex.exec(header ?? "");
-    if (matches != null && matches[1]) {
-      fileName = matches[1].replace(/['"]/g, "");
-    }
-
     const signatureReq = await fetch(
-      `/api/createSignature?accessToken=${docuSignAuthDetails.accessToken}&basePath=${docuSignAuthDetails.basePath}&accountId=${docuSignAuthDetails.apiAccountId}&name=${fileName}&sessionId=${veevaAuthDetails.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}`,
+      `/api/createSignature?accessToken=${docuSignAuthDetails.accessToken}&basePath=${docuSignAuthDetails.basePath}&accountId=${docuSignAuthDetails.apiAccountId}&sessionId=${veevaAuthDetails.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}`,
       {
-        body: documentInfoResponse,
         method: "POST",
       }
     );
