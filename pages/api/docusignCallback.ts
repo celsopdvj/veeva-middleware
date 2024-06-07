@@ -172,7 +172,7 @@ const uploadSignedDocuments = async (
       } else {
         await createDocumentRendition(
           sessionId,
-          "signed.pdf",
+          "DocuSign Rendition.pdf",
           document,
           veevaDocId,
           vaultUrl
