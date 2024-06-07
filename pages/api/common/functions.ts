@@ -1,3 +1,4 @@
+import { VeevaConfig } from "@/interfaces/veevaConfig";
 import docusign from "docusign-esign";
 
 export const authenticateVeeva = async (
@@ -18,6 +19,7 @@ export const authenticateVeeva = async (
     return {
       success: true,
       data: await response.json(),
+      vaultUrl,
     };
   } catch (error: any) {
     return {
@@ -103,3 +105,32 @@ function getDocusignConsent(dsJWTClientId: string, dsOauthServer: string) {
     };
   }
 }
+
+type VaultInfoRespose = {
+  success: boolean;
+  data: string | null;
+  vault: VeevaConfig;
+};
+
+export const getVaultInfo = async (
+  vaultId: string
+): Promise<VaultInfoRespose> => {
+  const vaultInfoReq = await fetch(
+    `${process.env.APP_URL}/getVaultInfo/${vaultId}`
+  );
+  const vaults: VeevaConfig[] = await vaultInfoReq.json();
+
+  if (vaults.length == 0) {
+    return {
+      success: false,
+      data: "Could't find Vault configuration",
+      vault: {} as VeevaConfig,
+    };
+  }
+
+  return {
+    success: true,
+    data: null,
+    vault: vaults.pop() ?? ({} as VeevaConfig),
+  };
+};

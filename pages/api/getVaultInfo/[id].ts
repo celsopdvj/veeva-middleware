@@ -6,9 +6,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const query = req.query;
+  const { id } = req.query;
 
-  const envolope = (await getVaultInfo(query.vaultId as string)).rows;
+  const envolope = (await getVaultInfo(id as string)).rows;
 
   res.status(200).json(envolope);
 }

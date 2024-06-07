@@ -1,17 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { authenticateVeeva } from "./common/functions";
+import { authenticateVeeva, getVaultInfo } from "./common/functions";
 import docusign from "docusign-esign";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const username = "docusign_integration@partnersi-usdm.com";
-  const password = "Vault2024!";
-
-  const vaultUrl =
-    "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3";
-
   const bodyData = req.body.data.envelopeSummary;
   const customFields: any[] = bodyData.customFields.textCustomFields;
   const envelopeId = req.body.data.envelopeId;
@@ -21,7 +15,21 @@ export default async function handler(
   const minorVersion = customFields.find((p) => p.name == "minorVersion").value;
   const completedAt = bodyData.completedDateTime;
 
-  const veevaAuth = await authenticateVeeva(vaultUrl, username, password);
+  const { success, vault, data } = await getVaultInfo(vaultId as string);
+
+  if (!success) {
+    res.status(200).json({
+      success,
+      data,
+    });
+    return;
+  }
+
+  const veevaAuth = await authenticateVeeva(
+    vault.dns,
+    vault.username,
+    vault.password
+  );
 
   if (!veevaAuth.success) {
     res.status(200).json(veevaAuth.data);
@@ -31,7 +39,7 @@ export default async function handler(
   const sessionId = veevaAuth.data.sessionId;
 
   const updateDocData = await updateDocumentData(
-    vaultUrl,
+    vault.dns,
     sessionId,
     docId,
     completedAt
@@ -43,7 +51,7 @@ export default async function handler(
   }
 
   const updateDocStatus = await updateDocumentStatus(
-    vaultUrl,
+    vault.dns,
     sessionId,
     docId,
     majorVersion,
@@ -51,7 +59,7 @@ export default async function handler(
   );
 
   const docusignAuthReq = await fetch(
-    `${process.env.APP_URL}/api/authDocusign?sessionId=${sessionId}`
+    `${process.env.APP_URL}/api/authDocusign?sessionId=${sessionId}&vaultUrl=${vault.dns}`
   );
 
   const docusignAuth = await docusignAuthReq.json();
@@ -61,7 +69,7 @@ export default async function handler(
     docusignAuth.data.accessToken,
     docusignAuth.data.apiAccountId,
     envelopeId,
-    vaultUrl,
+    vault.dns,
     docId,
     sessionId
   );

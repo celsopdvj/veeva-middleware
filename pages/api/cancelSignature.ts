@@ -7,11 +7,8 @@ export default async function handler(
 ) {
   const query = req.query;
 
-  const vaultUrl =
-    "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3";
-
   const documentInfo = await updateDocumentData(
-    vaultUrl,
+    query.vaultUrl as string,
     query.sessionId as string,
     query.documentId as string
   );
@@ -21,7 +18,7 @@ export default async function handler(
   }
 
   const documentStatusInfo = await updateDocumentStatus(
-    vaultUrl,
+    query.vaultUrl as string,
     query.sessionId as string,
     query.documentId as string,
     query.majorVersion as string,

@@ -10,6 +10,7 @@ export default function CancelSignature() {
   const majVer = searchParams.get("majVer");
   const minVer = searchParams.get("minVer");
   const envelopeId = searchParams.get("envelopeId");
+  const vaultId = searchParams.get("vaultId");
 
   const [message, setMessage] = useState("Cancelling...");
 
@@ -18,7 +19,7 @@ export default function CancelSignature() {
       return;
     }
 
-    const veevaAuthReq = await fetch("/api/authVeeva");
+    const veevaAuthReq = await fetch(`/api/authVeeva?vaultId=${vaultId}`);
 
     let veevaAuthInfo = await veevaAuthReq.json();
     if (!veevaAuthInfo.success) {
@@ -27,7 +28,7 @@ export default function CancelSignature() {
     }
 
     const docusignAuthReq = await fetch(
-      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}`
+      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}&vaultUrl=${veevaAuthInfo.vaultUrl}`
     );
 
     let accountInfo = await docusignAuthReq.json();
@@ -42,7 +43,7 @@ export default function CancelSignature() {
     }
 
     const documentReq = await fetch(
-      `/api/cancelSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}&envelopeId=${envelopeId}`
+      `/api/cancelSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}&envelopeId=${envelopeId}&vaultUrl=${accountInfo.vaultUrl}`
     );
 
     let documentInfoResponse = await documentReq.json();
@@ -52,7 +53,7 @@ export default function CancelSignature() {
     }
 
     setMessage("Signature request cancelled");
-  }, [docId, majVer, minVer, envelopeId, router]);
+  }, [docId, majVer, minVer, envelopeId, router, vaultId]);
 
   useEffect(() => {
     handleCancelSignature();

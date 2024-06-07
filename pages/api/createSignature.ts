@@ -1,7 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import docusign from "docusign-esign";
-import fs from "fs";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,7 +10,8 @@ export default async function handler(
 
   const fileDetails = await getDocument(
     query.sessionId as string,
-    query.documentId as string
+    query.documentId as string,
+    query.vaultUrl as string
   );
 
   const envolope = await sendEnvelope(
@@ -23,15 +23,21 @@ export default async function handler(
     query.documentId as string,
     query.majorVersion as string,
     query.minorVersion as string,
-    fileDetails.file
+    fileDetails.file,
+    query.vaultId as string,
+    query.vaultUrl as string
   );
 
   res.status(200).json(envolope);
 }
 
-const getDocument = async (sessionId: string, documentId: string) => {
+const getDocument = async (
+  sessionId: string,
+  documentId: string,
+  vaultUrl: string
+) => {
   const documentReq = await fetch(
-    `${process.env.APP_URL}/api/getVeevaDocument?sessionId=${sessionId}&documentId=${documentId}`
+    `${process.env.APP_URL}/api/getVeevaDocument?sessionId=${sessionId}&documentId=${documentId}&vaultUrl=${vaultUrl}`
   );
 
   let documentInfoResponse = await documentReq.arrayBuffer();
@@ -65,7 +71,9 @@ const sendEnvelope = async (
   documentId: string,
   majorVersion: string,
   minorVersion: string,
-  fileBase64: ArrayBuffer | null
+  fileBase64: ArrayBuffer | null,
+  vaultId: string,
+  vaultUrl: string
 ) => {
   try {
     let dsApiClient = new docusign.ApiClient();
@@ -79,7 +87,7 @@ const sendEnvelope = async (
       fileName,
       fileBase64,
       documentId,
-      "61653",
+      vaultId,
       majorVersion,
       minorVersion
     );
@@ -99,7 +107,7 @@ const sendEnvelope = async (
       envelopeId,
       {
         envelopeViewRequest: {
-          returnUrl: `${process.env.APP_URL}/waitSignatures?docId=${documentId}&majorVersion=${majorVersion}&minorVersion=${minorVersion}`,
+          returnUrl: `${process.env.APP_URL}/waitSignatures?docId=${documentId}&majorVersion=${majorVersion}&minorVersion=${minorVersion}&vaultId=${vaultId}`,
           settings: {
             showHeaderActions: false,
           },
@@ -108,7 +116,7 @@ const sendEnvelope = async (
     );
 
     const updateData = await updateDocumentData(
-      "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3",
+      vaultUrl,
       sessionId,
       documentId,
       envelopeId

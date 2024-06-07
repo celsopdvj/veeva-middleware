@@ -9,12 +9,14 @@ export default function Home() {
   const majVer = searchParams.get("majVer");
   const minVer = searchParams.get("minVer");
   const envelopeId = searchParams.get("envelopeId");
+  const vaultId = searchParams.get("vaultId");
 
   const [error, setError] = useState("");
   const [envelope, setEnvelope] = useState<any>({});
   const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [isFetchingSenderUrl, setIsFetchingSenderUrl] = useState(false);
   const [veevaAuthDetails, setVeevaAuthDetails] = useState<any | null>(null);
+  const [vaultUrl, setVaultUrl] = useState("");
   const [docuSignAuthDetails, setDocuSignAuthDetails] = useState<any | null>(
     null
   );
@@ -34,7 +36,7 @@ export default function Home() {
     if (!docId?.length || docId?.length == 0) return;
 
     setError("");
-    const veevaAuthReq = await fetch("/api/authVeeva");
+    const veevaAuthReq = await fetch(`/api/authVeeva?vaultId=${vaultId}`);
 
     let veevaAuthInfo = await veevaAuthReq.json();
     if (!veevaAuthInfo.success) {
@@ -44,10 +46,11 @@ export default function Home() {
     }
 
     setVeevaAuthDetails(veevaAuthInfo.data);
+    setVaultUrl(veevaAuthInfo.vaultUrl);
 
     setError("");
     const docusignAuthReq = await fetch(
-      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}`
+      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}&vaultUrl=${veevaAuthInfo.vaultUrl}`
     );
 
     let accountInfo = await docusignAuthReq.json();
@@ -65,7 +68,7 @@ export default function Home() {
     setDocuSignAuthDetails(accountInfo.data);
 
     setIsAuthenticating(false);
-  }, [router, docId]);
+  }, [router, docId, vaultId]);
 
   const handleCreateSenderView = useCallback(async () => {
     if (!envelopeId?.length || envelopeId?.length == 0) return;
@@ -98,7 +101,7 @@ export default function Home() {
 
   const handleCreateSignature = async () => {
     const signatureReq = await fetch(
-      `/api/createSignature?accessToken=${docuSignAuthDetails.accessToken}&basePath=${docuSignAuthDetails.basePath}&accountId=${docuSignAuthDetails.apiAccountId}&sessionId=${veevaAuthDetails.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}`,
+      `/api/createSignature?accessToken=${docuSignAuthDetails.accessToken}&basePath=${docuSignAuthDetails.basePath}&accountId=${docuSignAuthDetails.apiAccountId}&sessionId=${veevaAuthDetails.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}&vaultId=${vaultId}&vaultUrl=${vaultUrl}`,
       {
         method: "POST",
       }
