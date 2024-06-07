@@ -43,19 +43,51 @@ export async function authenticateDocusign(
     dsApi.setOAuthBasePath(dsOauthServer.replace("https://", "")); // it should be domain only.
     let rsaKey = Buffer.from(privateKey.replace(/\\n/g, "\n"));
 
-    const results = await dsApi.requestJWTUserToken(
+    const resultsAdmin = await dsApi.requestJWTUserToken(
       dsJWTClientId,
       impersonatedUserGuid,
       DOCUSIGN_SCOPES,
       rsaKey,
       jwtLifeSec
     );
-    const accessToken = results.body.access_token;
+    const accessTokenAdmin = resultsAdmin.body.access_token;
+    const userInfoResultsAdmin = await dsApi.getUserInfo(accessTokenAdmin);
 
-    // get user info
+    let userInfoAdmin = userInfoResultsAdmin.accounts.find(
+      (account: any) => account.isDefault === "true"
+    );
+
+    dsApi.setBasePath(`${userInfoAdmin.baseUri}/restapi`);
+    dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
+    const usApi = new docusign.UsersApi(dsApi);
+
+    let user: any = {};
+
+    try {
+      const userList = await usApi.list(userInfoAdmin.accountId, {
+        email: "jmurray@usdm.com",
+      });
+
+      userList?.users && (user = userList?.users[0]);
+    } catch (error: any) {
+      console.log(error.message);
+      return {
+        success: false,
+        data: "User not found",
+      };
+    }
+
+    const results = await dsApi.requestJWTUserToken(
+      dsJWTClientId,
+      user.userId,
+      DOCUSIGN_SCOPES,
+      rsaKey,
+      jwtLifeSec
+    );
+
+    const accessToken = results.body.access_token;
     const userInfoResults = await dsApi.getUserInfo(accessToken);
 
-    // use the default account
     let userInfo = userInfoResults.accounts.find(
       (account: any) => account.isDefault === "true"
     );
