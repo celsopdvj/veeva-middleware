@@ -164,7 +164,7 @@ const uploadSignedDocuments = async (
       if (documentId === "certificate") {
         await createDocumentAttachment(
           sessionId,
-          "certificate.pdf",
+          "DocuSign Certificate.pdf",
           document,
           veevaDocId,
           vaultUrl
