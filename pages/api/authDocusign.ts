@@ -7,7 +7,10 @@ export default async function handler(
 ) {
   const query = req.query;
 
-  const authDetails = await getAuthDetails(query.sessionId as string);
+  const authDetails = await getAuthDetails(
+    query.sessionId as string,
+    query.vaultUrl as string
+  );
   if (!authDetails.success) {
     res.status(200).json(authDetails);
     return;
@@ -25,9 +28,9 @@ export default async function handler(
   res.status(200).json(auth);
 }
 
-async function getAuthDetails(sessionId: string) {
+async function getAuthDetails(sessionId: string, vaultUrl: string) {
   const authDetails = await fetch(
-    `${process.env.APP_URL}/api/getDocusignAuthConfig?sessionId=${sessionId}`
+    `${process.env.APP_URL}/api/getDocusignAuthConfig?sessionId=${sessionId}&vaultUrl=${vaultUrl}`
   );
 
   return authDetails.json();

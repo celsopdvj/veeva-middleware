@@ -6,16 +6,16 @@ export default async function handler(
 ) {
   const query = req.query;
 
-  const authDetails = await getAuthDetails(query.sessionId as string);
+  const authDetails = await getAuthDetails(
+    query.sessionId as string,
+    query.vaultUrl as string
+  );
 
   return res.status(200).send(authDetails);
 }
 
-const getAuthDetails = async (sessionId: string) => {
+const getAuthDetails = async (sessionId: string, vaultUrl: string) => {
   try {
-    const vaultUrl =
-      "https://partnersi-usdm-qualitydocs.veevavault.com/api/v23.3";
-
     const fetchAllResponse = await fetch(
       `${vaultUrl}/vobjects/docusign_authentication__c?sort=created_date__v desc&limit=1&fields=id`,
       {

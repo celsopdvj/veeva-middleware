@@ -5,7 +5,7 @@ export default function WaitSignatures() {
   const [message, setMessage] = useState("");
 
   const handleCheckVault = async () => {
-    const veevaAuthReq = await fetch("/api/authVeeva");
+    const veevaAuthReq = await fetch(`/api/authVeeva?vaultId=${vaultId}`);
     let veevaAuthInfo = await veevaAuthReq.json();
     if (!veevaAuthInfo.success) {
       setMessage(veevaAuthInfo.data);
