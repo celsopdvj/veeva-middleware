@@ -30,7 +30,7 @@ const getSenderView = async (
 
   const senderUrl = await envelopesApi.createSenderView(accountId, envelopeId, {
     envelopeViewRequest: {
-      returnUrl: `${process.env.APP_URL}/WaitSignatures`,
+      returnUrl: `${process.env.APP_URL}/waitSignatures`,
       settings: {
         showHeaderActions: false,
       },
