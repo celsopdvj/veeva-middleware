@@ -116,7 +116,7 @@ export const getVaultInfo = async (
   vaultId: string
 ): Promise<VaultInfoRespose> => {
   const vaultInfoReq = await fetch(
-    `${process.env.APP_URL}/getVaultInfo/${vaultId}`
+    `${process.env.APP_URL}/api/getVaultInfo/${vaultId}`
   );
   const vaults: VeevaConfig[] = await vaultInfoReq.json();
 
