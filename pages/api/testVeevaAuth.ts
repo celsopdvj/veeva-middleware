@@ -1,25 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { authenticateVeeva, getVaultInfo } from "./common/functions";
+import { authenticateVeeva } from "./common/functions";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const vaultId = req.query.vaultId;
-  const { success, vault, data } = await getVaultInfo(vaultId as string);
-
-  if (!success) {
-    res.status(200).json({
-      success,
-      data,
-    });
-    return;
-  }
+  const dns = req.query.dns;
+  const username = req.query.username;
+  const password = req.query.password;
 
   const authData = await authenticateVeeva(
-    vault.dns,
-    vault.username,
-    vault.password
+    dns as string,
+    username as string,
+    password as string
   );
 
   if (authData.data.responseMessage) {
