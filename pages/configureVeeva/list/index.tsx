@@ -1,6 +1,7 @@
 import { VeevaConfig } from "@/interfaces/veevaConfig";
 import { useCallback, useEffect, useState } from "react";
 import day from "dayjs";
+import Link from "next/link";
 
 export default function ListConfig() {
   const [configs, setConfigs] = useState([]);
@@ -38,7 +39,7 @@ export default function ListConfig() {
               <td>{day(config.createdat).format("M/D/YYYY hh:mm A UTCZ")}</td>
               <td>{config.createdby}</td>
               <td className="flex gap-3 text-orange-500">
-                <a href={`/configureVeeva?id=${config.id}`}>Edit</a>
+                <Link href={`/configureVeeva?id=${config.id}`}>Edit</Link>
               </td>
             </tr>
           ))}
