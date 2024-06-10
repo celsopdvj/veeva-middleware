@@ -2,9 +2,12 @@ import { VeevaConfig } from "@/interfaces/veevaConfig";
 import { useCallback, useEffect, useState } from "react";
 import day from "dayjs";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
+import AccessDenied from "@/components/accessDenied";
 
 export default function ListConfig() {
   const [configs, setConfigs] = useState([]);
+  const { data: session, status } = useSession();
 
   const fetchConfigs = useCallback(async () => {
     const fetchResult = await fetch("/api/getVaultInfo/all");
@@ -17,8 +20,29 @@ export default function ListConfig() {
     fetchConfigs();
   }, [fetchConfigs]);
 
+  if (status === "loading") return <div>Loading...</div>;
+
+  if (!session) {
+    return <AccessDenied />;
+  }
+
   return (
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="flex gap-2 text-sm font-medium py-6">
+        <div>
+          Logged in as <span className="italic">{session.user?.name}</span>
+        </div>
+        <span>|</span>
+        <div>
+          <button
+            className="text-orange-600 hover:text-orange-500"
+            onClick={(_) => signOut()}
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
       <table className="lead">
         <thead className="text-left">
           <tr className="border-b-2">

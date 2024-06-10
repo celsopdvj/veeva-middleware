@@ -1,3 +1,5 @@
+import AccessDenied from "@/components/accessDenied";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -10,6 +12,7 @@ export default function WaitSignatures() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const { data: session, status } = useSession();
 
   const search = useSearchParams();
 
@@ -65,8 +68,29 @@ export default function WaitSignatures() {
     fetchConfig();
   }, [fetchConfig]);
 
+  if (status === "loading") return <div>Loading...</div>;
+
+  if (!session) {
+    return <AccessDenied />;
+  }
+
   return (
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="flex gap-2 text-sm font-medium">
+        <div>
+          Logged in as <span className="italic">{session.user?.name}</span>
+        </div>
+        <span>|</span>
+        <div>
+          <button
+            className="text-orange-600 hover:text-orange-500"
+            onClick={(_) => signOut()}
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
           Configure your Veeva Vault
