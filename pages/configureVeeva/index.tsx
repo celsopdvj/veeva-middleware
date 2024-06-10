@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function WaitSignatures() {
   const [vaultId, setVaultId] = useState<number | null>(null);
@@ -8,6 +9,10 @@ export default function WaitSignatures() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const search = useSearchParams();
+
+  const id = search.get("id") as string;
 
   const handleCheckVault = async () => {
     setIsFetching(true);
@@ -31,7 +36,7 @@ export default function WaitSignatures() {
     setMessage("");
     setSuccessMessage("");
     const veevaAuthReq = await fetch(
-      `/api/saveVeevaAuth?dns=${dns}&username=${username}&password=${password}&vaultId=${vaultId}`
+      `/api/saveVeevaAuth?dns=${dns}&username=${username}&password=${password}&vaultId=${vaultId}&id=${id}`
     );
 
     let veevaAuthInfo = await veevaAuthReq.json();
@@ -42,6 +47,22 @@ export default function WaitSignatures() {
     }
     setSuccessMessage("Vault configuration saved.");
   };
+
+  const fetchConfig = useCallback(async () => {
+    if (id?.length > 0) {
+      const fetchResult = await fetch(`/api/getVaultById/${id}`);
+      const vaultResult = await fetchResult.json();
+
+      setDns(vaultResult[0].dns);
+      setUsername(vaultResult[0].username);
+      setPassword(vaultResult[0].password);
+      setVaultId(vaultResult[0].vaultid);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
 
   return (
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
@@ -144,12 +165,21 @@ export default function WaitSignatures() {
           </div>
         </div>
 
+        <div className="text-center">
+          <a
+            href="/configureVeeva/list"
+            className="text-orange-500 hover:text-orange-600"
+          >
+            List existing configuration
+          </a>
+        </div>
+
         <div>
           <button
             type="submit"
             disabled={isFetching}
             onClick={vaultId ? handleSave : handleCheckVault}
-            className="flex w-full justify-center rounded-md bg-indigo-600 disabled:bg-indigo-300 disabled:cursor-not-allowed px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="flex w-full justify-center rounded-md bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
           >
             {vaultId ? "Save" : "Check"}
           </button>

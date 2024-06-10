@@ -2,8 +2,9 @@ export interface VeevaConfig {
   id: string;
   name: string;
   dns: string;
+  vaultid: string;
   username: string;
   password: string;
-  createdBy: string;
-  createdAt: Date;
+  createdby: string;
+  createdat: string;
 }

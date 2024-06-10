@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { sql } from "@vercel/postgres";
+import { VeevaConfig } from "@/interfaces/veevaConfig";
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,12 +13,9 @@ export default async function handler(
   res.status(200).json(envolope);
 }
 
-const getVaultInfo = async (vaultId: string) => {
-  let query = "SELECT * FROM veevaConfig";
-
-  if (vaultId !== "all") {
-    query += ` WHERE vaultId = '${vaultId}'`;
-  }
-
-  return await sql.query(query);
+const getVaultInfo = async (configId: string) => {
+  return await sql<VeevaConfig>`
+        SELECT *
+        FROM veevaConfig
+        WHERE id = ${configId}`;
 };

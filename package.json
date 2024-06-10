@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@vercel/postgres": "^0.8.0",
+    "dayjs": "^1.11.11",
     "docusign-esign": "^7.0.2",
     "next": "14.2.3",
     "react": "^18",
