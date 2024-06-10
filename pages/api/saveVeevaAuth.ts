@@ -10,6 +10,7 @@ export default async function handler(
     const username = req.query.username as string;
     const password = req.query.password as string;
     const vaultId = req.query.vaultId as string;
+    const createdby = req.query.createdby as string;
     const id = req.query.id as string;
 
     if (id != "null") {
@@ -42,7 +43,7 @@ export default async function handler(
                   now()
               )
     `,
-        [vaultId, dns, dns, username, password, "celso"]
+        [vaultId, dns, dns, username, password, createdby]
       );
     }
 

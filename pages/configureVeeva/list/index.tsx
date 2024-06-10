@@ -41,6 +41,15 @@ export default function ListConfig() {
             Sign Out
           </button>
         </div>
+
+        <div className="ml-auto px-12">
+          <Link
+            href="/configureVeeva"
+            className="bg-orange-600 hover:bg-orange-500 text-white p-2 rounded-md"
+          >
+            New
+          </Link>
+        </div>
       </div>
 
       <table className="lead">

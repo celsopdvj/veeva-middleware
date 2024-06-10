@@ -1,4 +1,5 @@
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function AccessDenied() {
@@ -11,18 +12,29 @@ export default function AccessDenied() {
       </div>
 
       <div className="text-center text-md font-medium p-4">
-        You must be{" "}
-        <Link
-          className="text-orange-600 hover:text-orange-500"
-          href="/api/auth/signin"
-          onClick={(e) => {
-            e.preventDefault();
-            signIn();
-          }}
-        >
-          signed in
-        </Link>{" "}
+        You must be
+        <span className="text-orange-600 hover:text-orange-500">
+          {" "}
+          signed in{" "}
+        </span>
         to view this page
+      </div>
+
+      <div>
+        <div className="flex justify-center py-12">
+          <button
+            className="flex gap-6 items-center justify-center w-[250px] border-2 p-2 rounded-md text-sm"
+            onClick={() => signIn("azure-ad")}
+          >
+            <Image
+              src="https://authjs.dev/img/providers/azure.svg"
+              width={20}
+              height={20}
+              alt="Azure Logo"
+            />
+            Sign in with Azure
+          </button>
+        </div>
       </div>
     </div>
   );

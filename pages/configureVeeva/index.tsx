@@ -40,7 +40,7 @@ export default function WaitSignatures() {
     setMessage("");
     setSuccessMessage("");
     const veevaAuthReq = await fetch(
-      `/api/saveVeevaAuth?dns=${dns}&username=${username}&password=${password}&vaultId=${vaultId}&id=${id}`
+      `/api/saveVeevaAuth?dns=${dns}&username=${username}&password=${password}&vaultId=${vaultId}&id=${id}&createdby=${session?.user?.email}`
     );
 
     let veevaAuthInfo = await veevaAuthReq.json();
