@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -166,12 +167,12 @@ export default function WaitSignatures() {
         </div>
 
         <div className="text-center">
-          <a
+          <Link
             href="/configureVeeva/list"
             className="text-orange-500 hover:text-orange-600"
           >
             List existing configuration
-          </a>
+          </Link>
         </div>
 
         <div>
