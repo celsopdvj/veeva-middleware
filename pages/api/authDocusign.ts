@@ -23,7 +23,8 @@ export default async function handler(
     client_id__c,
     authentication_url__c,
     private_key__c,
-    user_id__c
+    user_id__c,
+    query.email as string
   );
   res.status(200).json(auth);
 }

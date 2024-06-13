@@ -10,6 +10,7 @@ export default function Sign() {
   const minVer = searchParams.get("minVer");
   const envelopeId = searchParams.get("envelopeId");
   const vaultId = searchParams.get("vaultId");
+  const userEmail = searchParams.get("userEmail");
 
   const [error, setError] = useState("");
   const [envelope, setEnvelope] = useState<any>({});
@@ -50,7 +51,7 @@ export default function Sign() {
 
     setError("");
     const docusignAuthReq = await fetch(
-      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}&vaultUrl=${veevaAuthInfo.vaultUrl}`
+      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}&vaultUrl=${veevaAuthInfo.vaultUrl}&email=${userEmail}`
     );
 
     let accountInfo = await docusignAuthReq.json();
@@ -58,7 +59,9 @@ export default function Sign() {
       setIsAuthenticating(false);
       if (accountInfo.consent) {
         router.push(
-          `/consent?consentUrl=${encodeURIComponent(accountInfo.data)}`
+          `/consent?consentUrl=${encodeURIComponent(
+            accountInfo.consentUrl
+          )}&adminConsentUrl=${encodeURIComponent(accountInfo.adminConsentUrl)}`
         );
       }
       setError(accountInfo.data);
@@ -68,7 +71,7 @@ export default function Sign() {
     setDocuSignAuthDetails(accountInfo.data);
 
     setIsAuthenticating(false);
-  }, [router, docId, vaultId]);
+  }, [router, docId, vaultId, userEmail]);
 
   const handleCreateSenderView = useCallback(async () => {
     if (!envelopeId?.length || envelopeId?.length == 0) return;
@@ -117,11 +120,11 @@ export default function Sign() {
   };
 
   return (
-    <div>
-      <span className="text-red-500 font-semibold">{error}</span>
+    <div className="ml-20">
       <div>
         {envelope.senderUrl ? (
           <iframe
+            title="Docusign eSignature"
             className="w-full aspect-video"
             src={
               envelope.senderUrl +
@@ -131,15 +134,21 @@ export default function Sign() {
         ) : (
           <div>
             <button
+              type="button"
               onClick={handleCreateSignature}
               disabled={shouldDisableButton}
-              className="m-20 justify-center rounded-md disabled:bg-indigo-300 disabled:cursor-default bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="mt-20 mb-6 justify-center rounded-md disabled:bg-indigo-300 disabled:cursor-default bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               {buttonMessage()}
             </button>
           </div>
         )}
       </div>
+      {error.length > 0 && (
+        <span className="bg-red-400 text-white text-sm font-semibold px-3 py-1.5 rounded-md">
+          {error}
+        </span>
+      )}
     </div>
   );
 }
