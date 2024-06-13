@@ -11,6 +11,7 @@ export default function CancelSignature() {
   const minVer = searchParams.get("minVer");
   const envelopeId = searchParams.get("envelopeId");
   const vaultId = searchParams.get("vaultId");
+  const userEmail = searchParams.get("userEmail");
 
   const [message, setMessage] = useState("Cancelling...");
 
@@ -28,14 +29,16 @@ export default function CancelSignature() {
     }
 
     const docusignAuthReq = await fetch(
-      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}&vaultUrl=${veevaAuthInfo.vaultUrl}`
+      `/api/authDocusign?sessionId=${veevaAuthInfo.data.sessionId}&vaultUrl=${veevaAuthInfo.vaultUrl}&email=${userEmail}`
     );
 
     let accountInfo = await docusignAuthReq.json();
     if (!accountInfo.success) {
       if (accountInfo.consent) {
         router.push(
-          `/consent?consentUrl=${encodeURIComponent(accountInfo.data)}`
+          `/consent?consentUrl=${encodeURIComponent(
+            accountInfo.consentUrl
+          )}&adminConsentUrl=${encodeURIComponent(accountInfo.adminConsentUrl)}`
         );
       }
       setMessage(accountInfo.data);
@@ -55,7 +58,7 @@ export default function CancelSignature() {
     }
 
     setMessage("Signature request cancelled");
-  }, [docId, majVer, minVer, envelopeId, router, vaultId]);
+  }, [docId, majVer, minVer, envelopeId, router, vaultId, userEmail]);
 
   useEffect(() => {
     handleCancelSignature();

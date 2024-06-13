@@ -35,7 +35,8 @@ export async function authenticateDocusign(
   dsJWTClientId: string,
   dsOauthServer: string,
   privateKey: string,
-  impersonatedUserGuid: string
+  impersonatedUserGuid: string,
+  email: string
 ) {
   try {
     const jwtLifeSec = 10 * 60; // requested lifetime for the JWT is 10 min
@@ -63,18 +64,20 @@ export async function authenticateDocusign(
 
     let user: any = {};
 
-    try {
-      const userList = await usApi.list(userInfoAdmin.accountId, {
-        email: "jmurray@usdm.com",
-      });
+    if (email && email != "null" && email.length > 0) {
+      try {
+        const userList = await usApi.list(userInfoAdmin.accountId, {
+          email,
+        });
 
-      userList?.users && (user = userList?.users[0]);
-    } catch (error: any) {
-      console.log(error.message);
-      return {
-        success: false,
-        data: "User not found",
-      };
+        userList?.users && (user = userList?.users[0]);
+      } catch (error: any) {
+        return {
+          success: false,
+          data: `User with email ${email} not found on Docusign.`,
+          userNotFound: true,
+        };
+      }
     }
 
     const results = await dsApi.requestJWTUserToken(
@@ -105,7 +108,12 @@ export async function authenticateDocusign(
     // Determine the source of the error
     if (body && body.error && body.error === "consent_required") {
       // The user needs to grant consent
-      return getDocusignConsent(dsJWTClientId, dsOauthServer);
+      return {
+        success: false,
+        consent: true,
+        consentUrl: getDocusignConsent(dsJWTClientId, dsOauthServer),
+        adminConsentUrl: getDocusignAdminConsent(dsJWTClientId, dsOauthServer),
+      };
     }
     return {
       success: false,
@@ -125,11 +133,28 @@ function getDocusignConsent(dsJWTClientId: string, dsOauthServer: string) {
       `scope=${urlScopes}&client_id=${dsJWTClientId}&` +
       `redirect_uri=${redirectUri}`;
 
+    return consentUrl;
+  } catch (error: any) {
     return {
       success: false,
-      consent: true,
-      data: consentUrl,
+      data: error.message,
     };
+  }
+}
+
+function getDocusignAdminConsent(dsJWTClientId: string, dsOauthServer: string) {
+  try {
+    var urlScopes = DOCUSIGN_SCOPES.join("+");
+
+    // Construct consent URL
+    var redirectUri = `${process.env.APP_URL}/consent/success`;
+    var consentUrl =
+      `${dsOauthServer}/oauth/auth?response_type=code&` +
+      `scope=openid&` +
+      `admin_consent_scope=${urlScopes}&client_id=${dsJWTClientId}&` +
+      `redirect_uri=${redirectUri}`;
+
+    return consentUrl;
   } catch (error: any) {
     return {
       success: false,
