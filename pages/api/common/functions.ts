@@ -62,22 +62,31 @@ export async function authenticateDocusign(
     dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
     const usApi = new docusign.UsersApi(dsApi);
 
+    if (!email || email == "null" || email.length == 0) {
+      return {
+        success: true,
+        data: {
+          accessToken: accessTokenAdmin,
+          apiAccountId: userInfoAdmin.accountId,
+          basePath: `${userInfoAdmin.baseUri}/restapi`,
+        },
+      };
+    }
+
     let user: any = {};
 
-    if (email && email != "null" && email.length > 0) {
-      try {
-        const userList = await usApi.list(userInfoAdmin.accountId, {
-          email,
-        });
+    try {
+      const userList = await usApi.list(userInfoAdmin.accountId, {
+        email,
+      });
 
-        userList?.users && (user = userList?.users[0]);
-      } catch (error: any) {
-        return {
-          success: false,
-          data: `User with email ${email} not found on Docusign.`,
-          userNotFound: true,
-        };
-      }
+      userList?.users && (user = userList?.users[0]);
+    } catch (error: any) {
+      return {
+        success: false,
+        data: `User with email ${email} not found on Docusign.`,
+        userNotFound: true,
+      };
     }
 
     const results = await dsApi.requestJWTUserToken(
@@ -117,6 +126,7 @@ export async function authenticateDocusign(
         consent: true,
         consentUrl: getDocusignConsent(dsJWTClientId, dsOauthServer),
         adminConsentUrl: getDocusignAdminConsent(dsJWTClientId, dsOauthServer),
+        data: "Consent required",
       };
     }
     return {
