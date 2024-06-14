@@ -105,8 +105,12 @@ export async function authenticateDocusign(
     };
   } catch (e: any) {
     let body = e.response && e.response.body;
+    let bodyErr = e.response && e.response.data;
     // Determine the source of the error
-    if (body && body.error && body.error === "consent_required") {
+    if (
+      (body && body.error && body.error === "consent_required") ||
+      (bodyErr && bodyErr.error && bodyErr.error === "consent_required")
+    ) {
       // The user needs to grant consent
       return {
         success: false,
