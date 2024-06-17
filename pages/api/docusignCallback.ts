@@ -9,6 +9,15 @@ export default async function handler(
   const bodyData = req.body.data.envelopeSummary;
   const customFields: any[] = bodyData.customFields.textCustomFields;
   const envelopeId = req.body.data.envelopeId;
+
+  if (!customFields.find((p) => p.name == "docId")) {
+    res.status(200).json({
+      success: true,
+      data: "Not a Veeva integration document",
+    });
+    return;
+  }
+
   const docId = customFields.find((p) => p.name == "docId").value;
   const vaultId = customFields.find((p) => p.name == "vaultId").value;
   const majorVersion = customFields.find((p) => p.name == "majorVersion").value;
