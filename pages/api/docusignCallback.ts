@@ -73,7 +73,7 @@ export default async function handler(
   );
 
   const docusignAuthReq = await fetch(
-    `${process.env.APP_URL}/api/authDocusign?sessionId=${sessionId}&vaultUrl=${vault.dns}`
+    `${process.env.APP_URL}/api/authDocusign?sessionId=${sessionId}&vaultUrl=${vault.dns}&email=`
   );
 
   const docusignAuth = await docusignAuthReq.json();
