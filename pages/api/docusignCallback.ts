@@ -7,16 +7,21 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const bodyData = req.body.data.envelopeSummary;
-  const customFields: any[] = bodyData.customFields.textCustomFields;
-  const envelopeId = req.body.data.envelopeId;
 
-  if (!customFields.find((p) => p.name == "docId")) {
+  if (
+    !bodyData?.customFields?.textCustomFields?.find(
+      (p: any) => p.name == "docId"
+    )
+  ) {
     res.status(200).json({
       success: true,
       data: "Not a Veeva integration document",
     });
     return;
   }
+
+  const customFields: any[] = bodyData.customFields.textCustomFields;
+  const envelopeId = req.body.data.envelopeId;
 
   const docId = customFields.find((p) => p.name == "docId").value;
   const vaultId = customFields.find((p) => p.name == "vaultId").value;
