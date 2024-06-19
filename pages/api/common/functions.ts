@@ -39,9 +39,9 @@ export async function authenticateDocusign(
   email: string
 ) {
   try {
-    const jwtLifeSec = 10 * 60; // requested lifetime for the JWT is 10 min
+    const jwtLifeSec = 10 * 60;
     const dsApi = new docusign.ApiClient();
-    dsApi.setOAuthBasePath(dsOauthServer.replace("https://", "")); // it should be domain only.
+    dsApi.setOAuthBasePath(dsOauthServer.replace("https://", ""));
     let rsaKey = Buffer.from(privateKey.replace(/\\n/g, "\n"));
 
     const resultsAdmin = await dsApi.requestJWTUserToken(
@@ -59,8 +59,8 @@ export async function authenticateDocusign(
       (account: any) => account.isDefault === "true"
     );
 
-    //dsApi.setBasePath(`${userInfoAdmin.baseUri}/restapi`);
-    //dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
+    dsApi.setBasePath(`${userInfoAdmin.baseUri}/restapi`);
+    dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
     const usApi = new docusign.UsersApi(dsApi);
 
     if (!email || email == "null" || email.length == 0) {
