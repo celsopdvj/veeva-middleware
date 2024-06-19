@@ -80,7 +80,7 @@ export default function Sign() {
     setIsFetchingSenderUrl(true);
 
     const senderViewReq = await fetch(
-      `/api/getSenderView?accessToken=${docuSignAuthDetails.accessToken}&basePath=${docuSignAuthDetails.basePath}&accountId=${docuSignAuthDetails.apiAccountId}&envelopeId=${envelopeId}`
+      `/api/getSenderView?accessToken=${docuSignAuthDetails.accessToken}&basePath=${docuSignAuthDetails.basePath}&accountId=${docuSignAuthDetails.apiAccountId}&envelopeId=${envelopeId}&docId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}&vaultId=${vaultId}`
     );
 
     const envelopeData = await senderViewReq.json();
@@ -92,7 +92,7 @@ export default function Sign() {
     }
 
     setIsFetchingSenderUrl(false);
-  }, [docuSignAuthDetails, envelopeId]);
+  }, [docuSignAuthDetails, envelopeId, docId, majVer, minVer, vaultId]);
 
   useEffect(() => {
     handleAuth();

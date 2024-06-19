@@ -11,7 +11,11 @@ export default async function handler(
     query.basePath as string,
     query.accessToken as string,
     query.accountId as string,
-    query.envelopeId as string
+    query.envelopeId as string,
+    query.docId as string,
+    query.majorVersion as string,
+    query.minorVersion as string,
+    query.vaultId as string
   );
 
   res.status(200).json(envolope);
@@ -21,7 +25,11 @@ const getSenderView = async (
   basePath: string,
   accessToken: string,
   accountId: string,
-  envelopeId: string
+  envelopeId: string,
+  documentId: string,
+  majorVersion: string,
+  minorVersion: string,
+  vaultId: string
 ) => {
   let dsApiClient = new docusign.ApiClient();
   dsApiClient.setBasePath(basePath);
@@ -30,7 +38,7 @@ const getSenderView = async (
 
   const senderUrl = await envelopesApi.createSenderView(accountId, envelopeId, {
     envelopeViewRequest: {
-      returnUrl: `${process.env.APP_URL}/waitSignatures`,
+      returnUrl: `${process.env.APP_URL}/waitSignatures?docId=${documentId}&majorVersion=${majorVersion}&minorVersion=${minorVersion}&vaultId=${vaultId}`,
       settings: {
         showHeaderActions: false,
       },
