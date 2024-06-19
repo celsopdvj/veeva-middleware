@@ -45,8 +45,6 @@ export default function CancelSignature() {
       return;
     }
 
-    console.log(accountInfo);
-
     const documentReq = await fetch(
       `/api/cancelSignature?accessToken=${accountInfo.data.accessToken}&basePath=${accountInfo.data.basePath}&accountId=${accountInfo.data.apiAccountId}&sessionId=${veevaAuthInfo.data.sessionId}&documentId=${docId}&majorVersion=${majVer}&minorVersion=${minVer}&envelopeId=${envelopeId}&vaultUrl=${veevaAuthInfo.vaultUrl}`
     );

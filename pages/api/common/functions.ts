@@ -52,14 +52,15 @@ export async function authenticateDocusign(
       jwtLifeSec
     );
     const accessTokenAdmin = resultsAdmin.body.access_token;
+
     const userInfoResultsAdmin = await dsApi.getUserInfo(accessTokenAdmin);
 
     let userInfoAdmin = userInfoResultsAdmin.accounts.find(
       (account: any) => account.isDefault === "true"
     );
 
-    dsApi.setBasePath(`${userInfoAdmin.baseUri}/restapi`);
-    dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
+    //dsApi.setBasePath(`${userInfoAdmin.baseUri}/restapi`);
+    //dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
     const usApi = new docusign.UsersApi(dsApi);
 
     if (!email || email == "null" || email.length == 0) {
