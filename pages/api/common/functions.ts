@@ -31,7 +31,7 @@ export const authenticateVeeva = async (
 
 const DOCUSIGN_SCOPES = ["signature", "impersonation"];
 
-export async function authenticateDocusign(
+async function authAdmin(
   dsJWTClientId: string,
   dsOauthServer: string,
   privateKey: string,
@@ -41,6 +41,7 @@ export async function authenticateDocusign(
   try {
     const jwtLifeSec = 10 * 60;
     const dsApi = new docusign.ApiClient();
+
     dsApi.setOAuthBasePath(dsOauthServer.replace("https://", ""));
     let rsaKey = Buffer.from(privateKey.replace(/\\n/g, "\n"));
 
@@ -59,10 +60,6 @@ export async function authenticateDocusign(
       (account: any) => account.isDefault === "true"
     );
 
-    dsApi.setBasePath(`${userInfoAdmin.baseUri}/restapi`);
-    dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
-    const usApi = new docusign.UsersApi(dsApi);
-
     if (!email || email == "null" || email.length == 0) {
       return {
         success: true,
@@ -70,9 +67,14 @@ export async function authenticateDocusign(
           accessToken: accessTokenAdmin,
           apiAccountId: userInfoAdmin.accountId,
           basePath: `${userInfoAdmin.baseUri}/restapi`,
+          user: null,
         },
       };
     }
+
+    dsApi.setBasePath(`${userInfoAdmin.baseUri}/restapi`);
+    dsApi.addDefaultHeader("Authorization", "Bearer " + accessTokenAdmin);
+    const usApi = new docusign.UsersApi(dsApi);
 
     let user: any = {};
 
@@ -90,9 +92,49 @@ export async function authenticateDocusign(
       };
     }
 
+    return {
+      success: true,
+      data: {
+        accessToken: accessTokenAdmin,
+        apiAccountId: userInfoAdmin.accountId,
+        basePath: `${userInfoAdmin.baseUri}/restapi`,
+        user: user,
+      },
+    };
+  } catch (e: any) {
+    return isConsentRequired(e, dsJWTClientId, dsOauthServer);
+  }
+}
+
+export async function authenticateDocusign(
+  dsJWTClientId: string,
+  dsOauthServer: string,
+  privateKey: string,
+  impersonatedUserGuid: string,
+  email: string
+) {
+  try {
+    const adminAuth = await authAdmin(
+      dsJWTClientId,
+      dsOauthServer,
+      privateKey,
+      impersonatedUserGuid,
+      email
+    );
+
+    if (!adminAuth.success || !adminAuth.data.user) {
+      return adminAuth;
+    }
+
+    const jwtLifeSec = 10 * 60;
+    const dsApi = new docusign.ApiClient();
+
+    dsApi.setOAuthBasePath(dsOauthServer.replace("https://", ""));
+    let rsaKey = Buffer.from(privateKey.replace(/\\n/g, "\n"));
+
     const results = await dsApi.requestJWTUserToken(
       dsJWTClientId,
-      user.userId,
+      adminAuth.data.user.userId,
       DOCUSIGN_SCOPES,
       rsaKey,
       jwtLifeSec
@@ -114,27 +156,35 @@ export async function authenticateDocusign(
       },
     };
   } catch (e: any) {
-    let body = e.response && e.response.body;
-    let bodyErr = e.response && e.response.data;
-    // Determine the source of the error
-    if (
-      (body && body.error && body.error === "consent_required") ||
-      (bodyErr && bodyErr.error && bodyErr.error === "consent_required")
-    ) {
-      // The user needs to grant consent
-      return {
-        success: false,
-        consent: true,
-        consentUrl: getDocusignConsent(dsJWTClientId, dsOauthServer),
-        adminConsentUrl: getDocusignAdminConsent(dsJWTClientId, dsOauthServer),
-        data: "Consent required",
-      };
-    }
+    return isConsentRequired(e, dsJWTClientId, dsOauthServer);
+  }
+}
+
+function isConsentRequired(
+  e: any,
+  dsJWTClientId: string,
+  dsOauthServer: string
+) {
+  let body = e.response && e.response.body;
+  let bodyErr = e.response && e.response.data;
+  // Determine the source of the error
+  if (
+    (body && body.error && body.error === "consent_required") ||
+    (bodyErr && bodyErr.error && bodyErr.error === "consent_required")
+  ) {
+    // The user needs to grant consent
     return {
       success: false,
-      data: e.message,
+      consent: true,
+      consentUrl: getDocusignConsent(dsJWTClientId, dsOauthServer),
+      adminConsentUrl: getDocusignAdminConsent(dsJWTClientId, dsOauthServer),
+      data: "Consent required",
     };
   }
+  return {
+    success: false,
+    data: e.message,
+  };
 }
 
 function getDocusignConsent(dsJWTClientId: string, dsOauthServer: string) {

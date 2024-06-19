@@ -120,7 +120,7 @@ export default function Sign() {
   };
 
   return (
-    <div className="ml-20">
+    <div>
       <div>
         {envelope.senderUrl ? (
           <iframe
@@ -132,7 +132,7 @@ export default function Sign() {
             }
           ></iframe>
         ) : (
-          <div>
+          <div className="ml-20">
             <button
               type="button"
               onClick={handleCreateSignature}
@@ -145,7 +145,7 @@ export default function Sign() {
         )}
       </div>
       {error.length > 0 && (
-        <span className="bg-red-400 text-white text-sm font-semibold px-3 py-1.5 rounded-md">
+        <span className="bg-red-400 text-white text-sm font-semibold px-3 py-1.5 rounded-md ml-20">
           {error}
         </span>
       )}
