@@ -56,8 +56,11 @@ async function authAdmin(
 
     const userInfoResultsAdmin = await dsApi.getUserInfo(accessTokenAdmin);
 
+    // Workaround - Return impersonated user token sometimes
+    const isSameAccount = userInfoResultsAdmin.sub === impersonatedUserGuid;
+
     let userInfoAdmin = userInfoResultsAdmin.accounts.find(
-      (account: any) => account.isDefault === "true"
+      (account: any) => account.isDefault === (isSameAccount ? "true" : "false")
     );
 
     if (!email || email == "null" || email.length == 0) {
@@ -142,6 +145,8 @@ export async function authenticateDocusign(
 
     const accessToken = results.body.access_token;
     const userInfoResults = await dsApi.getUserInfo(accessToken);
+
+    console.log(userInfoResults);
 
     let userInfo = userInfoResults.accounts.find(
       (account: any) => account.isDefault === "true"
