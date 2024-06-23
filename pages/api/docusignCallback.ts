@@ -129,7 +129,7 @@ const updateDocumentStatus = async (
 ) => {
   try {
     await fetch(
-      `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/approve__c`,
+      `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/complete_signature__c`,
       {
         headers: {
           Authorization: sessionId,
