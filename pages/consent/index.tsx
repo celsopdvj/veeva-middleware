@@ -5,6 +5,7 @@ export default function Consent() {
   const searchParams = useSearchParams();
   const consentUrl = searchParams.get("consentUrl");
   const adminConsentUrl = searchParams.get("adminConsentUrl");
+  const email = searchParams.get("email");
 
   return (
     <div className="w-full text-center font-semibold leading-6 text-orange-500 p-20">
@@ -29,6 +30,10 @@ export default function Consent() {
         >
           Admin Consent
         </Link>
+      </div>
+      <div className="my-4 font-semibold text-sm text-gray-600 italic">
+        Your Docusign account email needs to match your Veeva user email (
+        {email}).
       </div>
     </div>
   );

@@ -146,8 +146,6 @@ export async function authenticateDocusign(
     const accessToken = results.body.access_token;
     const userInfoResults = await dsApi.getUserInfo(accessToken);
 
-    console.log(userInfoResults);
-
     let userInfo = userInfoResults.accounts.find(
       (account: any) => account.isDefault === "true"
     );

@@ -61,7 +61,9 @@ export default function Sign() {
         router.push(
           `/consent?consentUrl=${encodeURIComponent(
             accountInfo.consentUrl
-          )}&adminConsentUrl=${encodeURIComponent(accountInfo.adminConsentUrl)}`
+          )}&adminConsentUrl=${encodeURIComponent(
+            accountInfo.adminConsentUrl
+          )}&email=${userEmail}`
         );
       }
       setError(accountInfo.data);
