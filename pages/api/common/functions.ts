@@ -36,6 +36,7 @@ async function authAdmin(
   dsOauthServer: string,
   privateKey: string,
   impersonatedUserGuid: string,
+  apiAccountId: string,
   email: string
 ) {
   try {
@@ -56,12 +57,16 @@ async function authAdmin(
 
     const userInfoResultsAdmin = await dsApi.getUserInfo(accessTokenAdmin);
 
-    // Workaround - Return impersonated user token sometimes
-    const isSameAccount = userInfoResultsAdmin.sub === impersonatedUserGuid;
-
     let userInfoAdmin = userInfoResultsAdmin.accounts.find(
-      (account: any) => account.isDefault === (isSameAccount ? "true" : "false")
+      (account: any) => account.accountId === apiAccountId
     );
+
+    if (!userInfoAdmin) {
+      return {
+        success: false,
+        data: `User ${impersonatedUserGuid} not found on account ID ${apiAccountId}`,
+      };
+    }
 
     if (!email || email == "null" || email.length == 0) {
       return {
@@ -114,6 +119,7 @@ export async function authenticateDocusign(
   dsOauthServer: string,
   privateKey: string,
   impersonatedUserGuid: string,
+  apiAccountId: string,
   email: string
 ) {
   try {
@@ -122,6 +128,7 @@ export async function authenticateDocusign(
       dsOauthServer,
       privateKey,
       impersonatedUserGuid,
+      apiAccountId,
       email
     );
 
@@ -147,8 +154,15 @@ export async function authenticateDocusign(
     const userInfoResults = await dsApi.getUserInfo(accessToken);
 
     let userInfo = userInfoResults.accounts.find(
-      (account: any) => account.isDefault === "true"
+      (account: any) => account.accountId === apiAccountId
     );
+
+    if (!userInfo) {
+      return {
+        success: false,
+        data: `User ${email} not found on account ID ${apiAccountId}`,
+      };
+    }
 
     return {
       success: true,

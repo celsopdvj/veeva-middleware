@@ -36,7 +36,7 @@ const getAuthDetails = async (sessionId: string, vaultUrl: string) => {
     const id = fetchAllResponse.data[0].id;
 
     const fetchSingleResponse = await fetch(
-      `${vaultUrl}/vobjects/docusign_authentication__c/${id}?sort=created_date__v desc&limit=1&fields=authentication_url__c,client_id__c,private_key__c,user_id__c`,
+      `${vaultUrl}/vobjects/docusign_authentication__c/${id}?sort=created_date__v desc&limit=1&fields=authentication_url__c,client_id__c,private_key__c,user_id__c,api_account_id__c`,
       {
         headers: {
           Authorization: sessionId,

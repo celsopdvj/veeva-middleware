@@ -16,14 +16,20 @@ export default async function handler(
     return;
   }
 
-  const { authentication_url__c, client_id__c, private_key__c, user_id__c } =
-    authDetails.data;
+  const {
+    authentication_url__c,
+    client_id__c,
+    private_key__c,
+    user_id__c,
+    api_account_id__c,
+  } = authDetails.data;
 
   const auth = await authenticateDocusign(
     client_id__c,
     authentication_url__c,
     private_key__c,
     user_id__c,
+    api_account_id__c,
     query.email as string
   );
   res.status(200).json(auth);
