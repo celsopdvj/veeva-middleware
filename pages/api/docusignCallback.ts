@@ -73,7 +73,7 @@ export default async function handler(
     vault.dns,
     sessionId,
     docId,
-    `signatures_completed__c=true&completed_date__c=${completedAt}&signature_status__c=Completed`
+    updateDocumentQuery
   );
 
   if (!updateDocData.success) {
