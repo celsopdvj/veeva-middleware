@@ -52,11 +52,28 @@ export default async function handler(
 
   const sessionId = veevaAuth.data.sessionId;
 
+  const event = req.body.event;
+  let updateDocumentQuery = `signatures_completed__c=true&completed_date__c=${completedAt}&signature_status__c=Completed`;
+  let updateStatus = "complete_signature__c";
+  let wasCompleted = true;
+
+  if (event == "envelope-voided") {
+    updateDocumentQuery = `envelope_id__c=null&signature_status__c=Envelope Voided&signature_request_sent__c=false`;
+    updateStatus = "cancel_signature__c";
+    wasCompleted = false;
+  }
+
+  if (event == "envelope-declined") {
+    updateDocumentQuery = `envelope_id__c=null&signature_status__c=Envelope Declined&signature_request_sent__c=false`;
+    updateStatus = "cancel_signature__c";
+    wasCompleted = false;
+  }
+
   const updateDocData = await updateDocumentData(
     vault.dns,
     sessionId,
     docId,
-    completedAt
+    `signatures_completed__c=true&completed_date__c=${completedAt}&signature_status__c=Completed`
   );
 
   if (!updateDocData.success) {
@@ -69,8 +86,14 @@ export default async function handler(
     sessionId,
     docId,
     majorVersion,
-    minorVersion
+    minorVersion,
+    updateStatus
   );
+
+  if (!wasCompleted) {
+    res.status(200).json(updateDocStatus.data);
+    return;
+  }
 
   const docusignAuthReq = await fetch(
     `${process.env.APP_URL}/api/authDocusign?sessionId=${sessionId}&vaultUrl=${vault.dns}&email=`
@@ -95,7 +118,7 @@ const updateDocumentData = async (
   vaultUrl: string,
   sessionId: string,
   documentId: string,
-  completedAt: string
+  updateString: string
 ) => {
   try {
     await fetch(`${vaultUrl}/objects/documents/${documentId}`, {
@@ -105,7 +128,7 @@ const updateDocumentData = async (
         "Content-Type": "application/x-www-form-urlencoded",
       },
       method: "PUT",
-      body: `signatures_completed__c=true&completed_date__c=${completedAt}&signature_status__c=Completed`,
+      body: updateString,
     }).then((r) => r.json());
 
     return {
@@ -125,11 +148,12 @@ const updateDocumentStatus = async (
   sessionId: string,
   documentId: string,
   majorVersion: string,
-  minorVersion: string
+  minorVersion: string,
+  action: string
 ) => {
   try {
     await fetch(
-      `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/complete_signature__c`,
+      `${vaultUrl}/objects/documents/${documentId}/versions/${majorVersion}/${minorVersion}/lifecycle_actions/${action}`,
       {
         headers: {
           Authorization: sessionId,
